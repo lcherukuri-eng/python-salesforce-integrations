@@ -59,3 +59,19 @@ def exchange_code_for_token(code):
     )
 
     return response.json()
+
+def refresh_access_token(refresh_token):
+
+    payload = {
+        "grant_type": "refresh_token",
+        "client_id": os.getenv("SF_CLIENT_ID"),
+        "client_secret": os.getenv("SF_CLIENT_SECRET"),
+        "refresh_token": refresh_token
+    }
+
+    response = requests.post(
+        TOKEN_URL,
+        data=payload
+    )
+
+    return response.json()

@@ -3,7 +3,8 @@ from fastapi.responses import RedirectResponse
 
 from app.oauth_client import (
     get_authorization_url,
-    exchange_code_for_token
+    exchange_code_for_token,
+    refresh_access_token
 )
 from app.token_store import token_data
 from app.salesforce_client import (
@@ -37,6 +38,26 @@ def callback(code: str):
 
     return {
         "message": "Salesforce authentication successful"
+    }
+
+@app.get("/refresh-token")
+def refresh_token():
+
+    if not token_data:
+        return {
+            "error": "Login first"
+        }
+
+    token = refresh_access_token(
+        token_data["refresh_token"]
+    )
+
+    token_data["access_token"] = (
+        token["access_token"]
+    )
+
+    return {
+        "message": "Access token refreshed"
     }
 
 @app.get("/accounts")
