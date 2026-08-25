@@ -1,24 +1,38 @@
-Python Salesforce Integrations
-A collection of Python-based Salesforce integration examples demonstrating real-world enterprise integration patterns.
+# Python Salesforce Integrations
 
-Technologies
-Python
+A headless Salesforce integration platform built using Python, FastAPI, OAuth 2.0 PKCE, Pandas, and AWS S3.
+
+## Technologies
+
+- Python
+- FastAPI
+- Salesforce REST API
+- OAuth 2.0 PKCE
+- Pandas
+- JSON
+- AWS S3
+- boto3
+
+## Features
+
+- Salesforce OAuth 2.0 Authentication
+- PKCE Authorization Flow
+- Account Data Extraction
+- CSV Export using Pandas
+- AWS S3 File Upload
+- Headless Salesforce Integration
+
+## Architecture
+
+```text
+Salesforce
+    ↓
+OAuth 2.0 + PKCE
+    ↓
 FastAPI
-Salesforce REST API
-Salesforce Bulk API
+    ↓
 Pandas
-OAuth 2.0
-JSON
-Planned Use Cases
-Python → Salesforce record creation
-Salesforce → Python data extraction
-Bulk data processing
-CSV import/export
-Data transformations using Pandas
-Headless Salesforce integrations
-Error handling and logging
-Project Goal
-Demonstrate production-ready Python and Salesforce integration patterns commonly used in enterprise applications.
-
-Author
-Lavanya Cherukuri
+    ↓
+CSV Export
+    ↓
+AWS S3
