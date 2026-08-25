@@ -3,3 +3,5 @@ venv/
 __pycache__/
 *.pyc
 account.csv
+accounts_bulk.csv
+token.json
