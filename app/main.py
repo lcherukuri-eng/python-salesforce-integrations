@@ -1,0 +1,80 @@
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+
+from app.oauth_client import (
+    get_authorization_url,
+    exchange_code_for_token
+)
+from app.token_store import token_data
+from app.salesforce_client import (
+    get_accounts,
+    export_accounts_to_csv,
+    export_accounts_to_s3
+)
+
+app = FastAPI()
+
+@app.get("/")
+def home():
+    return {
+        "message": "Python Salesforce Integration API"
+    }
+
+@app.get("/login")
+def login():
+    return RedirectResponse(
+        get_authorization_url()
+    )
+
+@app.get("/callback")
+def callback(code: str):
+
+    token = exchange_code_for_token(code)
+
+    token_data["access_token"] = token["access_token"]
+    token_data["refresh_token"] = token["refresh_token"]
+    token_data["instance_url"] = token["instance_url"]
+
+    return {
+        "message": "Salesforce authentication successful"
+    }
+
+@app.get("/accounts")
+def accounts():
+
+    if not token_data:
+        return {
+            "error": "Login first using /login"
+        }
+
+    return get_accounts(
+        token_data["access_token"],
+        token_data["instance_url"]
+    )
+
+@app.get("/accounts/export")
+def export_accounts():
+
+    if not token_data:
+        return {
+            "error": "Login first using /login"
+        }
+
+    return export_accounts_to_csv(
+        token_data["access_token"],
+        token_data["instance_url"]
+    )
+
+@app.get("/accounts/export/s3")
+def export_accounts_s3():
+
+    if not token_data:
+        return {
+            "error":
+            "Login first using /login"
+        }
+
+    return export_accounts_to_s3(
+        token_data["access_token"],
+        token_data["instance_url"]
+    )
