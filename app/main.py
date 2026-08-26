@@ -1,4 +1,7 @@
-from fastapi import FastAPI
+from fastapi import (
+    FastAPI,
+    BackgroundTasks
+)
 from fastapi.responses import RedirectResponse
 
 from app.oauth_client import (
@@ -134,3 +137,30 @@ def account_data_quality():
         token_data["access_token"],
         token_data["instance_url"]
     )
+
+def run_s3_export():
+
+    export_accounts_to_s3(
+        token_data["access_token"],
+        token_data["instance_url"]
+    )
+
+@app.get("/accounts/export/s3/background")
+def export_accounts_background(
+        background_tasks: BackgroundTasks
+):
+
+    if not token_data:
+        return {
+            "error":
+                "Login first using /login"
+        }
+
+    background_tasks.add_task(
+        run_s3_export
+    )
+
+    return {
+        "message":
+            "Background export started"
+    }
