@@ -9,6 +9,9 @@ from app.oauth_client import (
     exchange_code_for_token,
     refresh_access_token
 )
+from app.oauth_client_credentials import (
+    get_client_credentials_token
+)
 from app.token_store import (
     load_token,
     save_token
@@ -73,6 +76,21 @@ def refresh_token():
         "message": "Access token refreshed"
     }
 
+@app.get("/client-credentials-token")
+def client_credentials_token():
+
+    return get_client_credentials_token()
+
+@app.get("/accounts/client-credentials")
+def get_accounts_client_credentials():
+
+    token = get_client_credentials_token()
+
+    return get_accounts(
+        token["access_token"],
+        token["instance_url"]
+    )
+    
 @app.get("/accounts")
 def accounts():
 

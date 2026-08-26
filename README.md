@@ -1,37 +1,62 @@
 # Python Salesforce Integrations
 
-A headless Salesforce integration platform built using Python, FastAPI, OAuth 2.0 PKCE, Pandas, and AWS S3.
+A headless Salesforce integration platform built using Python, FastAPI, Salesforce APIs, Pandas, and AWS S3.
 
 ## Technologies
 
 - Python
 - FastAPI
 - Salesforce REST API
-- OAuth 2.0 PKCE
+- Salesforce Bulk API 2.0
+- OAuth 2.0
+- PKCE
 - Pandas
-- JSON
 - AWS S3
 - boto3
 
 ## Features
 
-- Salesforce OAuth 2.0 Authentication
-- PKCE Authorization Flow
-- Account Data Extraction
-- CSV Export using Pandas
-- AWS S3 File Upload
-- Headless Salesforce Integration
+### Authentication
+
+- Authorization Code Flow with PKCE
+- Refresh Token Support
+- Token Persistence
+- Client Credentials Flow
+
+### Salesforce Integrations
+
+- Account Data Retrieval
+- CSV Export
+- AWS S3 Upload
+- Bulk API 2.0 Export
+
+### Analytics
+
+- Account Data Quality Analysis
+- Missing Data Detection
+- Duplicate Name Detection
+- Data Completeness Metrics
+
+### Backend Features
+
+- FastAPI Background Tasks
+- Reusable DataFrame Services
+- Environment-based Configuration
 
 ## Architecture
 
 ```text
 Salesforce
     ↓
-OAuth 2.0 + PKCE
+OAuth 2.0
+    ├── Authorization Code + PKCE
+    └── Client Credentials
     ↓
 FastAPI
     ↓
 Pandas
+    ↓
+Data Quality Analysis
     ↓
 CSV Export
     ↓
