@@ -1,6 +1,9 @@
 import os
 import boto3
 from dotenv import load_dotenv
+from app.logger import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
@@ -24,9 +27,19 @@ def upload_file_to_s3(file_name):
         "AWS_BUCKET_NAME"
     )
 
+    logger.info(
+        "Starting S3 upload for %s",
+        file_name
+    )
+
     s3.upload_file(
         file_name,
         bucket_name,
+        file_name
+    )
+
+    logger.info(
+        "S3 upload completed for %s",
         file_name
     )
 

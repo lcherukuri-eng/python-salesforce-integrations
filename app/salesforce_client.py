@@ -2,6 +2,9 @@ import requests
 import pandas as pd
 from app.s3_client import upload_file_to_s3
 import os
+from app.logger import get_logger
+
+logger = get_logger(__name__)
 
 API_VERSION = os.getenv(
     "SF_API_VERSION",
@@ -39,7 +42,7 @@ def get_accounts_dataframe(
         url,
         headers=headers,
         params={"q": query}
-    )   
+    ) 
 
     records = response.json()["records"]
 
@@ -123,6 +126,10 @@ def analyze_accounts(
     df = get_accounts_dataframe(
         access_token,
         instance_url
+    )
+
+    logger.info(
+        "Data quality analysis executed"
     )
 
     return {
