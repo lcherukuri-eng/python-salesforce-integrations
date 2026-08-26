@@ -13,7 +13,8 @@ from app.token_store import (
 from app.salesforce_client import (
     get_accounts,
     export_accounts_to_csv,
-    export_accounts_to_s3
+    export_accounts_to_s3,
+    analyze_accounts
 )
 from app.bulk_client import bulk_export_accounts
 
@@ -119,4 +120,17 @@ def export_accounts_with_bulk_api():
     return bulk_export_accounts(
         token_data["access_token"],
         token_data["instance_url"],
+    )
+
+@app.get("/data-quality/accounts")
+def account_data_quality():
+
+    if not token_data:
+        return {
+            "error": "Login first using /login"
+        }
+
+    return analyze_accounts(
+        token_data["access_token"],
+        token_data["instance_url"]
     )

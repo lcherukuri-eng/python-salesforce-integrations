@@ -2,6 +2,7 @@ venv/
 .env
 __pycache__/
 *.pyc
-account.csv
+accounts.csv
+account_s3.csv
 accounts_bulk.csv
 token.json
