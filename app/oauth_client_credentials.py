@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN_URL = (
-    "https://orgfarm-d2ad0c3301-dev-ed.develop.my.salesforce.com"
-    "/services/oauth2/token"
+    os.getenv("SF_MY_DOMAIN_URL")
+    + "/services/oauth2/token"
 )
 
 

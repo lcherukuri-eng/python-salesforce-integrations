@@ -146,14 +146,11 @@ def export_accounts_with_bulk_api():
 @app.get("/data-quality/accounts")
 def account_data_quality():
 
-    if not token_data:
-        return {
-            "error": "Login first using /login"
-        }
+    token = get_client_credentials_token()
 
     return analyze_accounts(
-        token_data["access_token"],
-        token_data["instance_url"]
+        token["access_token"],
+        token["instance_url"]
     )
 
 def run_s3_export():
