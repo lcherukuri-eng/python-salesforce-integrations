@@ -25,7 +25,8 @@ from app.salesforce_client import (
 from app.bulk_client import bulk_export_accounts
 from app.data_cloud_client import (
     get_accounts,
-    get_account_by_name
+    get_account_by_name,
+    search_account
 )
 
 app = FastAPI()
@@ -195,3 +196,10 @@ def data_cloud_account(account_name: str):
     return get_account_by_name(
         account_name
     )
+
+@app.get("/data-cloud/search")
+def search_accounts(
+    q: str
+):
+
+    return search_account(q)

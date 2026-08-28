@@ -81,7 +81,7 @@ def get_accounts():
         })
 
     return accounts
-    
+
 
 def get_account_by_name(account_name):
 
@@ -112,3 +112,33 @@ def get_account_by_name(account_name):
         "phone": row[3],
         "description": row[4]
     }
+
+def search_account(account_name):
+
+    sql = f"""
+    SELECT
+        "Id__c",
+        "Name__c",
+        "Industry__c",
+        "Phone__c",
+        "Description__c"
+    FROM "Account_Home__dll"
+    WHERE lower("Name__c")
+        LIKE lower('%{account_name}%')
+    LIMIT 10
+    """
+
+    result = run_query(sql)
+
+    accounts = []
+
+    for row in result["data"]:
+        accounts.append({
+            "id": row[0],
+            "name": row[1],
+            "industry": row[2],
+            "phone": row[3],
+            "description": row[4]
+        })
+
+    return accounts
