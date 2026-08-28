@@ -23,6 +23,10 @@ from app.salesforce_client import (
     analyze_accounts
 )
 from app.bulk_client import bulk_export_accounts
+from app.data_cloud_client import (
+    get_accounts,
+    get_account_by_name
+)
 
 app = FastAPI()
 
@@ -179,3 +183,15 @@ def export_accounts_background(
         "message":
             "Background export started"
     }
+
+@app.get("/data-cloud/accounts")
+def data_cloud_accounts():
+
+    return get_accounts()
+
+@app.get("/data-cloud/accounts/{account_name}")
+def data_cloud_account(account_name: str):
+
+    return get_account_by_name(
+        account_name
+    )
