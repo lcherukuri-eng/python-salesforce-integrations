@@ -142,3 +142,127 @@ def search_account(account_name):
         })
 
     return accounts
+
+def get_opportunities():
+
+    sql = """
+    SELECT
+        "Id__c",
+        "Name__c",
+        "Amount__c",
+        "StageName__c",
+        "CloseDate__c",
+        "AccountId__c"
+    FROM "Opportunity_Home__dll"
+    LIMIT 10
+    """
+
+    result = run_query(sql)
+
+    opportunities = []
+
+    for row in result["data"]:
+
+        opportunities.append({
+            "id": row[0],
+            "name": row[1],
+            "amount": row[2],
+            "stage": row[3],
+            "close_date": row[4],
+            "account_id": row[5]
+        })
+
+    return opportunities
+
+def get_opportunities_by_account_id(account_id):
+
+    sql = f"""
+    SELECT
+        "Id__c",
+        "Name__c",
+        "Amount__c",
+        "StageName__c",
+        "CloseDate__c",
+        "AccountId__c"
+    FROM "Opportunity_Home__dll"
+    WHERE "AccountId__c" = '{account_id}'
+    """
+
+    result = run_query(sql)
+
+    opportunities = []
+
+    for row in result["data"]:
+
+        opportunities.append({
+            "id": row[0],
+            "name": row[1],
+           "amount": float(row[2]) if row[2] else 0,
+            "stage": row[3],
+            "close_date": row[4],
+            "account_id": row[5]
+        })
+
+    return opportunities
+
+def get_customer_context(account_name):
+
+    account = get_account_by_name(
+        account_name
+    )
+
+    opportunities = (
+        get_opportunities_by_account_id(
+            account["id"]
+        )
+    )
+
+    return {
+        "account": account,
+        "opportunities": opportunities
+    }
+
+def get_customer_insights(account_name):
+
+    context = get_customer_context(
+        account_name
+    )
+
+    closed_won_amount = sum(
+        opp["amount"]
+        for opp in context["opportunities"]
+        if opp["stage"] == "Closed Won"
+    )
+
+    open_pipeline_amount = sum(
+        opp["amount"]
+        for opp in context["opportunities"]
+        if opp["stage"] != "Closed Won"
+    )
+
+    total_pipeline = sum(
+        opp["amount"]
+        for opp in context["opportunities"]
+    )
+
+    return {
+        "account_name":
+            context["account"]["name"],
+
+        "industry":
+            context["account"]["industry"],
+
+        "total_opportunities":
+            len(context["opportunities"]),
+
+        "total_pipeline":
+            total_pipeline,
+
+        "closed_won_amount":
+            closed_won_amount,
+
+        "open_pipeline_amount":
+            open_pipeline_amount
+    }
+
+    

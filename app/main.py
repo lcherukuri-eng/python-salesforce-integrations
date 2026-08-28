@@ -26,7 +26,10 @@ from app.bulk_client import bulk_export_accounts
 from app.data_cloud_client import (
     get_accounts,
     get_account_by_name,
-    search_account
+    search_account,
+    get_opportunities,
+    get_customer_context,
+    get_customer_insights
 )
 
 app = FastAPI()
@@ -203,3 +206,26 @@ def search_accounts(
 ):
 
     return search_account(q)
+
+@app.get("/data-cloud/opportunities")
+def data_cloud_opportunities():
+
+    return get_opportunities()
+
+@app.get("/data-cloud/customer-context/{account_name}")
+def customer_context(
+    account_name: str
+):
+
+    return get_customer_context(
+        account_name
+    )
+
+@app.get("/data-cloud/customer-insights/{account_name}")
+def customer_insights(
+    account_name: str
+):
+
+    return get_customer_insights(
+        account_name
+    )

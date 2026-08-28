@@ -3,7 +3,6 @@
 A headless Salesforce integration platform built using Python, FastAPI, Salesforce APIs, Pandas, and AWS S3.
 
 ## Technologies
-
 - Python
 - FastAPI
 - Salesforce REST API
@@ -17,34 +16,40 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 ## Features
 
 ### Authentication
-
 - Authorization Code Flow with PKCE
 - Refresh Token Support
 - Token Persistence
 - Client Credentials Flow
 
 ### Salesforce Integrations
-
 - Account Data Retrieval
 - CSV Export
 - AWS S3 Upload
 - Bulk API 2.0 Export
 
-### Analytics
+### Data Cloud Integration
+- Data Stream ingestion for Account, Contact, and Opportunity
+- Data Cloud Token Exchange
+- Data Cloud Query API integration
+- Customer Search APIs
+- Customer Context APIs
+- Customer Insights APIs
 
+### Analytics
 - Account Data Quality Analysis
 - Missing Data Detection
 - Duplicate Name Detection
 - Data Completeness Metrics
 
-### Backend Features
+### Cloud Deployment
+- FastAPI deployed on Render
 
+### Backend Features
 - FastAPI Background Tasks
 - Reusable DataFrame Services
 - Environment-based Configuration
 
 ## Architecture
-
 ```text
 Salesforce
     ↓
