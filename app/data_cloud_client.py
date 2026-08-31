@@ -56,7 +56,7 @@ def run_query(sql):
     return response.json()
 
 
-def get_accounts():
+def get_data_cloud_accounts():
 
     sql = """
     SELECT

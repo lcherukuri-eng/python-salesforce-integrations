@@ -26,7 +26,7 @@ from app.salesforce_client import (
 )
 from app.bulk_client import bulk_export_accounts
 from app.data_cloud_client import (
-    get_accounts,
+    get_data_cloud_accounts,
     get_account_by_name,
     search_account,
     get_opportunities,
@@ -116,53 +116,40 @@ def get_accounts_client_credentials():
 @app.get("/accounts")
 def accounts():
 
-    if not token_data:
-        return {
-            "error": "Login first using /login"
-        }
+    token = get_client_credentials_token()
 
     return get_accounts(
-        token_data["access_token"],
-        token_data["instance_url"]
+        token["access_token"],
+        token["instance_url"]
     )
 
 @app.get("/accounts/export")
 def export_accounts():
 
-    if not token_data:
-        return {
-            "error": "Login first using /login"
-        }
+    token = get_client_credentials_token()
 
     return export_accounts_to_csv(
-        token_data["access_token"],
-        token_data["instance_url"]
+        token["access_token"],
+        token["instance_url"]
     )
 
 @app.get("/accounts/export/s3")
 def export_accounts_s3():
 
-    if not token_data:
-        return {
-            "error":
-            "Login first using /login"
-        }
+    token = get_client_credentials_token()
 
     return export_accounts_to_s3(
-        token_data["access_token"],
-        token_data["instance_url"]
+        token["access_token"],
+        token["instance_url"]
     )
 
 @app.get("/accounts/bulk-export")
 def export_accounts_with_bulk_api():
-    if not token_data:
-        return {
-            "error": "Login first using /login"
-        }
+    token = get_client_credentials_token()
 
     return bulk_export_accounts(
-        token_data["access_token"],
-        token_data["instance_url"],
+        token["access_token"],
+        token["instance_url"],
     )
 
 @app.get("/data-quality/accounts")
@@ -205,7 +192,7 @@ def export_accounts_background(
 @app.get("/data-cloud/accounts")
 def data_cloud_accounts():
 
-    return get_accounts()
+    return get_data_cloud_accounts()
 
 @app.get("/data-cloud/accounts/{account_name}")
 def data_cloud_account(account_name: str):
