@@ -12,6 +12,8 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - Pandas
 - AWS S3
 - boto3
+- Salesforce Data Cloud
+- Claude
 
 ## Features
 
@@ -34,6 +36,13 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - Customer Search APIs
 - Customer Context APIs
 - Customer Insights APIs
+- Calculated Insights APIs
+
+### AI Pipeline Analysis
+- Claude Integration
+- AI-generated Executive Pipeline Summaries
+- Pipeline Risk and Opportunity Analysis
+- Revenue Pipeline Recommendations
 
 ### Analytics
 - Account Data Quality Analysis

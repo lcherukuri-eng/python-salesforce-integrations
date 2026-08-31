@@ -3,6 +3,7 @@ import requests
 from app.oauth_client_credentials import (
     get_client_credentials_token
 )
+from app.services.claude_service import ask_claude
 
 
 def get_data_cloud_token():
@@ -59,15 +60,15 @@ def get_accounts():
 
     sql = """
     SELECT
-        "Id__c",
-        "Name__c",
-        "Industry__c",
-        "Phone__c"
-    FROM "Account_Home__dll"
+        "ssot__Id__c",
+        "ssot__Name__c",
+        "ssot__Description__c",
+        "ssot__AccountType__c"
+    FROM "ssot__Account__dlm"
     LIMIT 10
     """
 
-    result = run_query(sql)
+    result = run_query(sql)    
 
     accounts = []
 
@@ -76,9 +77,9 @@ def get_accounts():
         accounts.append({
             "id": row[0],
             "name": row[1],
-            "industry": row[2],
-            "phone": row[3]
-        })
+            "description": row[2],
+            "account_type": row[3]
+    })
 
     return accounts
 
@@ -87,13 +88,12 @@ def get_account_by_name(account_name):
 
     sql = f"""
     SELECT
-        "Id__c",
-        "Name__c",
-        "Industry__c",
-        "Phone__c",
-        "Description__c"
-    FROM "Account_Home__dll"
-    WHERE "Name__c" = '{account_name}'
+        "ssot__Id__c",
+        "ssot__Name__c",
+        "ssot__Description__c",
+        "ssot__AccountType__c"
+    FROM "ssot__Account__dlm"
+    WHERE "ssot__Name__c" = '{account_name}'
     """
 
     result = run_query(sql)
@@ -108,22 +108,20 @@ def get_account_by_name(account_name):
     return {
         "id": row[0],
         "name": row[1],
-        "industry": row[2],
-        "phone": row[3],
-        "description": row[4]
+        "description": row[2],
+        "account_type": row[3]
     }
 
 def search_account(account_name):
 
     sql = f"""
     SELECT
-        "Id__c",
-        "Name__c",
-        "Industry__c",
-        "Phone__c",
-        "Description__c"
-    FROM "Account_Home__dll"
-    WHERE lower("Name__c")
+        "ssot__Id__c",
+        "ssot__Name__c",
+        "ssot__Description__c",
+        "ssot__AccountType__c"
+    FROM "ssot__Account__dlm"
+    WHERE lower("ssot__Name__c")
         LIKE lower('%{account_name}%')
     LIMIT 10
     """
@@ -136,24 +134,24 @@ def search_account(account_name):
         accounts.append({
             "id": row[0],
             "name": row[1],
-            "industry": row[2],
-            "phone": row[3],
-            "description": row[4]
+            "description": row[2],
+            "account_type": row[3]
         })
 
     return accounts
+
 
 def get_opportunities():
 
     sql = """
     SELECT
-        "Id__c",
-        "Name__c",
-        "Amount__c",
-        "StageName__c",
-        "CloseDate__c",
-        "AccountId__c"
-    FROM "Opportunity_Home__dll"
+        "ssot__Id__c",
+        "ssot__Name__c",
+        "ssot__TotalAmount__c",
+        "ssot__OpportunityStageId__c",
+        "ssot__CloseDate__c",
+        "ssot__CustomerAccountId__c"
+    FROM "ssot__Opportunity__dlm"
     LIMIT 10
     """
 
@@ -166,7 +164,7 @@ def get_opportunities():
         opportunities.append({
             "id": row[0],
             "name": row[1],
-            "amount": row[2],
+            "amount": float(row[2]) if row[2] else 0,
             "stage": row[3],
             "close_date": row[4],
             "account_id": row[5]
@@ -178,14 +176,14 @@ def get_opportunities_by_account_id(account_id):
 
     sql = f"""
     SELECT
-        "Id__c",
-        "Name__c",
-        "Amount__c",
-        "StageName__c",
-        "CloseDate__c",
-        "AccountId__c"
-    FROM "Opportunity_Home__dll"
-    WHERE "AccountId__c" = '{account_id}'
+        "ssot__Id__c",
+        "ssot__Name__c",
+        "ssot__TotalAmount__c",
+        "ssot__OpportunityStageId__c",
+        "ssot__CloseDate__c",
+        "ssot__CustomerAccountId__c"
+    FROM "ssot__Opportunity__dlm"
+    WHERE "ssot__CustomerAccountId__c" = '{account_id}'
     """
 
     result = run_query(sql)
@@ -197,7 +195,7 @@ def get_opportunities_by_account_id(account_id):
         opportunities.append({
             "id": row[0],
             "name": row[1],
-           "amount": float(row[2]) if row[2] else 0,
+            "amount": float(row[2]) if row[2] else 0,
             "stage": row[3],
             "close_date": row[4],
             "account_id": row[5]
@@ -224,9 +222,7 @@ def get_customer_context(account_name):
 
 def get_customer_insights(account_name):
 
-    context = get_customer_context(
-        account_name
-    )
+    context = get_customer_context(account_name)
 
     closed_won_amount = sum(
         opp["amount"]
@@ -246,23 +242,69 @@ def get_customer_insights(account_name):
     )
 
     return {
-        "account_name":
-            context["account"]["name"],
+        "account_name": context["account"]["name"],
+        "description": context["account"]["description"],
+        "account_type": context["account"]["account_type"],
+        "total_opportunities": len(context["opportunities"]),
+        "total_pipeline": total_pipeline,
+        "closed_won_amount": closed_won_amount,
+        "open_pipeline_amount": open_pipeline_amount
+    }
 
-        "industry":
-            context["account"]["industry"],
+def get_account_pipeline_insights():
 
-        "total_opportunities":
-            len(context["opportunities"]),
+    sql = """
+    SELECT
+        ci."CustomerAccountId__c",
+        a."ssot__Name__c",
+        ci."OpportunityCount__c",
+        ci."TotalPipelineAmount__c"
+    FROM "AccountPipelineInsight__cio" ci
+    JOIN "ssot__Account__dlm" a
+    ON ci."CustomerAccountId__c" = a."ssot__Id__c"
+    LIMIT 10
+    """
 
-        "total_pipeline":
-            total_pipeline,
+    result = run_query(sql)
 
-        "closed_won_amount":
-            closed_won_amount,
+    insights = []
 
-        "open_pipeline_amount":
-            open_pipeline_amount
+    for row in result["data"]:
+        insights.append({
+            "account_id": row[0],
+            "account_name": row[1],
+            "opportunity_count": int(float(row[2])),
+            "total_pipeline_amount": float(row[3])
+        })
+
+    return insights
+    
+def get_ai_pipeline_summary():
+
+    insights = get_account_pipeline_insights()
+
+    prompt = f"""
+    You are a Salesforce Revenue Operations Analyst.
+
+    Analyze the following pipeline metrics and produce an executive summary.
+
+    Pipeline Data:
+    {insights}
+
+    Provide:
+    1. Top account by pipeline value
+    2. Accounts requiring attention
+    3. Pipeline risks and opportunities
+    4. Recommended next actions
+
+    Use quantitative evidence from the data.
+    Include dollar amounts when relevant.
+    Use professional business language.
+    Keep the response under 200 words.
+    """
+
+    return {
+        "summary": ask_claude(prompt)
     }
 
     

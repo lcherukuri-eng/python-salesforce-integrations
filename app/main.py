@@ -29,10 +29,19 @@ from app.data_cloud_client import (
     search_account,
     get_opportunities,
     get_customer_context,
-    get_customer_insights
+    get_customer_insights,
+    get_account_pipeline_insights,
+    get_ai_pipeline_summary
 )
+from app.api.claude import router as claude_router
 
 app = FastAPI()
+
+app.include_router(
+    claude_router,
+    prefix="/claude",
+    tags=["Claude"]
+)
 
 token_data = load_token()
 
@@ -229,3 +238,23 @@ def customer_insights(
     return get_customer_insights(
         account_name
     )
+
+@app.get("/data-cloud/calculated-insights")
+def calculated_insights():
+
+    return get_account_pipeline_insights()
+
+@app.get("/data-cloud/top-pipeline-account")
+def top_pipeline_account():
+
+    insights = get_account_pipeline_insights()
+
+    return max(
+        insights,
+        key=lambda x: x["total_pipeline_amount"]
+    )
+
+@app.get("/data-cloud/ai-pipeline-summary")
+def ai_pipeline_summary():
+
+    return get_ai_pipeline_summary()
