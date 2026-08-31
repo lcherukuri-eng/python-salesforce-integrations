@@ -1,8 +1,10 @@
 from fastapi import (
     FastAPI,
-    BackgroundTasks
+    BackgroundTasks,
+    Depends
 )
 from fastapi.responses import RedirectResponse
+from app.security import verify_request
 
 from app.oauth_client import (
     get_authorization_url,
@@ -35,7 +37,10 @@ from app.data_cloud_client import (
 )
 from app.api.claude import router as claude_router
 
-app = FastAPI()
+
+app = FastAPI(
+    dependencies=[Depends(verify_request)]
+)
 
 app.include_router(
     claude_router,
