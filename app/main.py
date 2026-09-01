@@ -5,14 +5,12 @@ from fastapi import (
 )
 from fastapi.responses import RedirectResponse
 from app.security import verify_request
+from app.dependencies import get_sf_token
 
 from app.oauth_client import (
     get_authorization_url,
     exchange_code_for_token,
     refresh_access_token
-)
-from app.oauth_client_credentials import (
-    get_client_credentials_token
 )
 from app.token_store import (
     load_token,
@@ -98,25 +96,11 @@ def refresh_token():
         "message": "Access token refreshed"
     }
 
-@app.get("/client-credentials-token")
-def client_credentials_token():
-
-    return get_client_credentials_token()
-
-@app.get("/accounts/client-credentials")
-def get_accounts_client_credentials():
-
-    token = get_client_credentials_token()
-
-    return get_accounts(
-        token["access_token"],
-        token["instance_url"]
-    )
     
 @app.get("/accounts")
-def accounts():
-
-    token = get_client_credentials_token()
+def accounts(
+    token = Depends(get_sf_token)
+):    
 
     return get_accounts(
         token["access_token"],
@@ -124,9 +108,9 @@ def accounts():
     )
 
 @app.get("/accounts/export")
-def export_accounts():
-
-    token = get_client_credentials_token()
+def export_accounts(
+    token = Depends(get_sf_token)
+):
 
     return export_accounts_to_csv(
         token["access_token"],
@@ -134,9 +118,9 @@ def export_accounts():
     )
 
 @app.get("/accounts/export/s3")
-def export_accounts_s3():
-
-    token = get_client_credentials_token()
+def export_accounts_s3(
+    token = Depends(get_sf_token)
+):
 
     return export_accounts_to_s3(
         token["access_token"],
@@ -144,8 +128,9 @@ def export_accounts_s3():
     )
 
 @app.get("/accounts/bulk-export")
-def export_accounts_with_bulk_api():
-    token = get_client_credentials_token()
+def export_accounts_with_bulk_api(
+    token = Depends(get_sf_token)
+):   
 
     return bulk_export_accounts(
         token["access_token"],
@@ -153,35 +138,31 @@ def export_accounts_with_bulk_api():
     )
 
 @app.get("/data-quality/accounts")
-def account_data_quality():
-
-    token = get_client_credentials_token()
+def account_data_quality(
+    token = Depends(get_sf_token)
+):
 
     return analyze_accounts(
         token["access_token"],
         token["instance_url"]
     )
 
-def run_s3_export():
+def run_s3_export(token):
 
     export_accounts_to_s3(
-        token_data["access_token"],
-        token_data["instance_url"]
+        token["access_token"],
+        token["instance_url"]
     )
 
 @app.get("/accounts/export/s3/background")
 def export_accounts_background(
-        background_tasks: BackgroundTasks
-):
-
-    if not token_data:
-        return {
-            "error":
-                "Login first using /login"
-        }
+        background_tasks: BackgroundTasks,
+        token=Depends(get_sf_token)
+):    
 
     background_tasks.add_task(
-        run_s3_export
+        run_s3_export,
+        token
     )
 
     return {
