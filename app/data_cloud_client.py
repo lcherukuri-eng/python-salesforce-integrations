@@ -4,6 +4,7 @@ from app.oauth_client_credentials import (
     get_client_credentials_token
 )
 from app.services.claude_service import ask_claude
+from datetime import datetime, timezone
 
 
 def get_data_cloud_token():
@@ -349,6 +350,64 @@ def get_identity_resolution_summary():
         "profiles": profiles
     }
 
+def send_web_clickstream_event():
 
+    dc_token = get_data_cloud_token()
+
+    tenant_url = dc_token["instance_url"]
+
+    if not tenant_url.startswith("https://"):
+        tenant_url = "https://" + tenant_url
+
+    payload = {
+        "data": [
+            {
+                "event_id": "evt-1001",
+                "email": "john@gmail.com",
+                "contact_id": "003TEST",
+                "event_type": "quote_request",
+                "product_sku": "SOLAR-PREMIUM",
+                "event_value": 50000,
+                "page_url": "https://example.com/solar",
+                "source_channel": "website",
+                "campaign_id": "FALL2026",
+                "event_timestamp": datetime.now(timezone.utc).strftime(
+                    "%Y-%m-%dT%H:%M:%S.000Z"
+                )
+            }
+        ]
+    }   
+
+    response = requests.post(
+        tenant_url
+        + "/api/v1/ingest/sources/Web_Clickstream_API/WebClickstreamEvent",
+        json=payload,
+        headers={
+            "Authorization":
+                f"Bearer {dc_token['access_token']}",
+            "Content-Type": "application/json"
+        },
+        timeout=30
+    )
+    
+    response.raise_for_status()
+
+    return response.json()
+
+def get_clickstream_events():
+
+    sql = """
+    SELECT
+        campaign_id__c,
+        contact_id__c,
+        email__c,
+        event_id__c,
+        event_timestamp__c,
+        event_type__c
+    FROM Web_Clickstream_API_WebClickstr_C43C6D80__dll
+    LIMIT 100
+    """
+
+    return run_query(sql)
 
     

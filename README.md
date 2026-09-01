@@ -33,10 +33,15 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - Data Stream ingestion for Account, Contact, and Opportunity
 - Data Cloud Token Exchange
 - Data Cloud Query API integration
+- Data Cloud Ingestion API Integration
 - Customer Search APIs
 - Customer Context APIs
 - Customer Insights APIs
 - Calculated Insights APIs
+- Identity Resolution Integration
+- Unified Individual APIs- 
+- Website Engagement Event Tracking
+- Clickstream Event Ingestion and Retrieval
 
 ### AI Pipeline Analysis
 - Claude Integration
@@ -59,6 +64,7 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - Environment-based Configuration
 
 ## Architecture
+
 ```text
 Salesforce
     ↓
@@ -67,11 +73,22 @@ OAuth 2.0
     └── Client Credentials
     ↓
 FastAPI
+    ├── Salesforce REST APIs
+    ├── Data Cloud Query API
+    ├── Data Cloud Ingestion API
+    └── Claude AI
     ↓
-Pandas
-    ↓
-Data Quality Analysis
-    ↓
-CSV Export
-    ↓
-AWS S3
+    ├── Pandas
+    │   ↓
+    │   Data Quality Analysis
+    │   ↓
+    │   CSV Export
+    │   ↓
+    │   AWS S3
+    │
+    └── Data Cloud
+        ├── Identity Resolution
+        ├── Unified Individual
+        ├── Calculated Insights
+        └── Website Engagement Events
+```

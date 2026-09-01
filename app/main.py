@@ -32,7 +32,9 @@ from app.data_cloud_client import (
     get_customer_insights,
     get_account_pipeline_insights,
     get_ai_pipeline_summary,
-    get_identity_resolution_summary
+    get_identity_resolution_summary,
+    send_web_clickstream_event,
+    get_clickstream_events
 )
 from app.api.claude import router as claude_router
 
@@ -236,3 +238,11 @@ def ai_pipeline_summary():
 @app.get("/identity-resolution/summary")
 def identity_resolution_summary():
     return get_identity_resolution_summary()
+
+@app.post("/clickstream/test")
+def clickstream_test():
+    return send_web_clickstream_event()
+
+@app.get("/clickstream/events")
+def clickstream_events():
+    return get_clickstream_events()
