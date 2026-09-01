@@ -307,4 +307,48 @@ def get_ai_pipeline_summary():
         "summary": ask_claude(prompt)
     }
 
+def get_unified_individuals():
+    """
+    Returns Unified Individuals created by
+    Data Cloud Identity Resolution.
+    """
+
+    sql = """
+    SELECT
+        ssot__FirstName__c,
+        ssot__LastName__c,
+        ssot__PersonName__c,
+        ssot__BirthDate__c,
+        ssot__CreatedDate__c,
+        ssot__LastModifiedDate__c
+    FROM UnifiedIndividual__dlm
+    LIMIT 100
+    """
+
+    return run_query(sql)
+
+
+def get_identity_resolution_summary():
+
+    result = get_unified_individuals()
+
+    profiles = []
+
+    for row in result.get("data", []):
+        profiles.append({
+            "first_name": row[0],
+            "last_name": row[1],
+            "full_name": row[2],
+            "birth_date": row[3],
+            "created_date": row[4],
+            "last_modified_date": row[5]
+        })
+
+    return {
+        "total_unified_profiles": len(profiles),
+        "profiles": profiles
+    }
+
+
+
     

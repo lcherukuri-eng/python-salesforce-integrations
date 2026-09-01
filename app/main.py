@@ -31,7 +31,8 @@ from app.data_cloud_client import (
     get_customer_context,
     get_customer_insights,
     get_account_pipeline_insights,
-    get_ai_pipeline_summary
+    get_ai_pipeline_summary,
+    get_identity_resolution_summary
 )
 from app.api.claude import router as claude_router
 
@@ -231,3 +232,7 @@ def top_pipeline_account():
 def ai_pipeline_summary():
 
     return get_ai_pipeline_summary()
+
+@app.get("/identity-resolution/summary")
+def identity_resolution_summary():
+    return get_identity_resolution_summary()
