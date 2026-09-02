@@ -39,7 +39,10 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - Customer Insights APIs
 - Calculated Insights APIs
 - Identity Resolution Integration
-- Unified Individual APIs- 
+- Unified Individual APIs
+- Unified Contact Point Email APIs
+- Customer 360 APIs
+- Website Engagement DMO Integration
 - Website Engagement Event Tracking
 - Clickstream Event Ingestion and Retrieval
 

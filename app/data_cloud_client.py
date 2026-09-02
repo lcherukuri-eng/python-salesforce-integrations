@@ -362,8 +362,8 @@ def send_web_clickstream_event():
     payload = {
         "data": [
             {
-                "event_id": "evt-1001",
-                "email": "john@gmail.com",
+                "event_id": "evt-1002",
+                "email": "agreen@uog.com",
                 "contact_id": "003TEST",
                 "event_type": "quote_request",
                 "product_sku": "SOLAR-PREMIUM",
@@ -394,20 +394,101 @@ def send_web_clickstream_event():
 
     return response.json()
 
-def get_clickstream_events():
+def get_website_engagements():   
 
     sql = """
     SELECT
-        campaign_id__c,
-        contact_id__c,
-        email__c,
-        event_id__c,
-        event_timestamp__c,
-        event_type__c
-    FROM Web_Clickstream_API_WebClickstr_C43C6D80__dll
+        ssot__DataSourceId__c,
+        ssot__DataSourceObjectId__c,
+        ssot__EngagementChannelId__c,
+        ssot__EngagementDateTm__c,
+        ssot__EngagementTypeId__c,
+        KQ_Id__c,
+        ssot__PageURL__c,
+        ssot__UtmCampaignName__c,
+        ssot__Id__c
+    FROM ssot__WebsiteEngagement__dlm
     LIMIT 100
     """
 
     return run_query(sql)
+
+def get_unified_profile_by_email(email):   
+
+    sql = f"""
+    SELECT
+        ssot__EmailAddress__c,
+        ssot__PartyId__c,
+        ssot__CreatedDate__c
+    FROM UnifiedContactPointEmail__dlm
+    WHERE ssot__EmailAddress__c = '{email}'
+    """
+
+    return run_query(sql)
+
+def get_identity_resolution_by_email(email):
+
+    result = get_unified_profile_by_email(email)
+
+    profiles = []
+
+    for row in result.get("data", []):
+        profiles.append({
+            "email": row[0],
+            "party_id": row[1],
+            "created_date": row[2]
+        })
+
+    return {
+        "email": email,
+        "match_found": len(profiles) > 0,
+        "profiles": profiles
+    }
+
+def get_customer_360(email):   
+
+    profile_result = get_unified_profile_by_email(email)
+
+    events_sql = """
+    SELECT
+        ssot__Id__c,
+        ssot__PageURL__c,
+        ssot__EngagementDateTm__c,
+        ssot__EngagementTypeId__c,
+        ssot__UtmCampaignName__c
+    FROM ssot__WebsiteEngagement__dlm
+    ORDER BY ssot__EngagementDateTm__c DESC
+    LIMIT 100
+    """
+
+    events_result = run_query(events_sql)
+
+    profile = []
+
+    for row in profile_result.get("data", []):
+        profile.append({
+            "email": row[0],
+            "party_id": row[1],
+            "created_date": row[2]
+        })
+
+    events = []
+
+    for row in events_result.get("data", []):
+        events.append({
+            "engagement_id": row[0],
+            "page_url": row[1],
+            "engagement_datetime": row[2],
+            "engagement_type": row[3],
+            "campaign_name": row[4]
+        })
+
+    return {
+        "email": email,
+        "profile_found": len(profile) > 0,
+        "profile": profile,
+        "total_events": len(events),
+        "events": events
+    }
 
     

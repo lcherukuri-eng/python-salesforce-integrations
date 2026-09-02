@@ -34,7 +34,9 @@ from app.data_cloud_client import (
     get_ai_pipeline_summary,
     get_identity_resolution_summary,
     send_web_clickstream_event,
-    get_clickstream_events
+    get_website_engagements,
+    get_identity_resolution_by_email,
+    get_customer_360
 )
 from app.api.claude import router as claude_router
 
@@ -243,6 +245,14 @@ def identity_resolution_summary():
 def clickstream_test():
     return send_web_clickstream_event()
 
-@app.get("/clickstream/events")
-def clickstream_events():
-    return get_clickstream_events()
+@app.get("/website-engagements")
+def website_engagements():
+    return get_website_engagements()
+
+@app.get("/identity-resolution/{email}")
+def identity_resolution_lookup(email: str):
+    return get_identity_resolution_by_email(email)
+
+@app.get("/customer-360/{email}")
+def customer_360(email: str):
+    return get_customer_360(email)
