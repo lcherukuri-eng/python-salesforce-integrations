@@ -1,13 +1,13 @@
 import os
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 
-client = Anthropic(
+client = AsyncAnthropic(
     api_key=os.getenv("ANTHROPIC_API_KEY")
 )
 
-def ask_claude(prompt: str) -> str:
+async def ask_claude(prompt: str) -> str:
 
-    response = client.messages.create(
+    response = await client.messages.create(
         model="claude-sonnet-5",
         max_tokens=1000,
         messages=[

@@ -4,8 +4,8 @@ from app.services.claude_service import ask_claude
 router = APIRouter()
 
 @router.get("/ask")
-def ask_ai(question: str):
-    answer = ask_claude(question)
+async def ask_ai(question: str):
+    answer = await ask_claude(question)
 
     return {
         "question": question,

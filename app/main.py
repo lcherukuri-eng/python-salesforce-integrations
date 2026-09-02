@@ -233,9 +233,9 @@ def top_pipeline_account():
     )
 
 @app.get("/data-cloud/ai-pipeline-summary")
-def ai_pipeline_summary():
+async def ai_pipeline_summary():
 
-    return get_ai_pipeline_summary()
+    return await get_ai_pipeline_summary()
 
 @app.get("/identity-resolution/summary")
 def identity_resolution_summary():

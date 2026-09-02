@@ -280,7 +280,7 @@ def get_account_pipeline_insights():
 
     return insights
     
-def get_ai_pipeline_summary():
+async def get_ai_pipeline_summary():
 
     insights = get_account_pipeline_insights()
 
@@ -305,7 +305,7 @@ def get_ai_pipeline_summary():
     """
 
     return {
-        "summary": ask_claude(prompt)
+        "summary": await ask_claude(prompt)
     }
 
 def get_unified_individuals():

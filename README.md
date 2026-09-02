@@ -51,6 +51,8 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - AI-generated Executive Pipeline Summaries
 - Pipeline Risk and Opportunity Analysis
 - Revenue Pipeline Recommendations
+- Async Anthropic API Integration
+- Async FastAPI AI Endpoints
 
 ### Analytics
 - Account Data Quality Analysis
