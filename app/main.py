@@ -19,7 +19,7 @@ from app.token_store import (
 from app.api.claude import router as claude_router
 from app.api.salesforce import router as salesforce_router
 from app.api.data_cloud import router as data_cloud_router
-
+from app.api.webhooks import router as webhook_router
 
 app = FastAPI()
 
@@ -43,6 +43,13 @@ app.include_router(
     tags=["Data Cloud"],
     dependencies=[Depends(verify_request)]
 )
+
+app.include_router(
+    webhook_router,
+    prefix="/webhooks",
+    tags=["Webhooks"]
+)
+
 
 token_data = load_token()
 
