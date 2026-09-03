@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
+from app.services.claude_service import ask_claude
+import json
 
 router = APIRouter()
 
@@ -11,13 +13,11 @@ class DataActionRequest(BaseModel):
 
 
 @router.post("/data-action")
-async def data_action(
-    payload: DataActionRequest
-):
-    print("Data Action Received")
-    print(payload)
+async def data_action(payload: dict):
+
+    print("=== DATA ACTION RECEIVED ===")
+    print(json.dumps(payload, indent=2))
 
     return {
-        "status": "success",
-        "payload": payload.model_dump()
+        "status": "success"
     }
