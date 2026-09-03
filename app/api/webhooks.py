@@ -1,13 +1,13 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter()
 
 
 class DataActionRequest(BaseModel):
-    customer_account_id: str
-    opportunity_count: int
-    total_pipeline_amount: float
+    customer_account_id: str = Field(alias="CustomerAccountId__c")
+    opportunity_count: int = Field(alias="OpportunityCount__c")
+    total_pipeline_amount: float = Field(alias="TotalPipelineAmount__c")
 
 
 @router.post("/data-action")
