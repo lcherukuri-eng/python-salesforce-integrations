@@ -5,9 +5,9 @@ router = APIRouter()
 
 
 class DataActionRequest(BaseModel):
-    email: str
-    event_type: str
-    score: int
+    customer_account_id: str
+    opportunity_count: int
+    total_pipeline_amount: float
 
 
 @router.post("/data-action")
