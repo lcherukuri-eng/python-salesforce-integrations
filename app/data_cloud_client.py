@@ -445,50 +445,29 @@ def get_identity_resolution_by_email(email):
         "profiles": profiles
     }
 
-def get_customer_360(email):   
 
-    profile_result = get_unified_profile_by_email(email)
+def get_pipeline_insight_by_account_id(account_id):
 
-    events_sql = """
+    sql = f"""
     SELECT
-        ssot__Id__c,
-        ssot__PageURL__c,
-        ssot__EngagementDateTm__c,
-        ssot__EngagementTypeId__c,
-        ssot__UtmCampaignName__c
-    FROM ssot__WebsiteEngagement__dlm
-    ORDER BY ssot__EngagementDateTm__c DESC
-    LIMIT 100
+        "CustomerAccountId__c",
+        "OpportunityCount__c",
+        "TotalPipelineAmount__c"
+    FROM "AccountPipelineInsight__cio"
+    WHERE "CustomerAccountId__c" = '{account_id}'
     """
 
-    events_result = run_query(events_sql)
+    result = run_query(sql)
 
-    profile = []
+    if not result["data"]:
+        return None
 
-    for row in profile_result.get("data", []):
-        profile.append({
-            "email": row[0],
-            "party_id": row[1],
-            "created_date": row[2]
-        })
-
-    events = []
-
-    for row in events_result.get("data", []):
-        events.append({
-            "engagement_id": row[0],
-            "page_url": row[1],
-            "engagement_datetime": row[2],
-            "engagement_type": row[3],
-            "campaign_name": row[4]
-        })
+    row = result["data"][0]
 
     return {
-        "email": email,
-        "profile_found": len(profile) > 0,
-        "profile": profile,
-        "total_events": len(events),
-        "events": events
+        "account_id": row[0],
+        "opportunity_count": int(float(row[1])),
+        "total_pipeline_amount": float(row[2])
     }
 
-    
+ 

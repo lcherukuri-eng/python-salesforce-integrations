@@ -12,8 +12,7 @@ from app.data_cloud_client import (
     get_identity_resolution_summary,
     send_web_clickstream_event,
     get_website_engagements,
-    get_identity_resolution_by_email,
-    get_customer_360
+    get_identity_resolution_by_email    
 )
 
 router = APIRouter()
@@ -96,7 +95,3 @@ def website_engagements():
 @router.get("/identity-resolution/{email}")
 def identity_resolution_lookup(email: str):
     return get_identity_resolution_by_email(email)
-
-@router.get("/customer-360/{email}")
-def customer_360(email: str):
-    return get_customer_360(email)

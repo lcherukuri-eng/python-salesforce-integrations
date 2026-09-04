@@ -20,6 +20,7 @@ from app.api.claude import router as claude_router
 from app.api.salesforce import router as salesforce_router
 from app.api.data_cloud import router as data_cloud_router
 from app.api.webhooks import router as webhook_router
+from app.api.customer360 import router as customer360_router
 
 app = FastAPI()
 
@@ -48,6 +49,13 @@ app.include_router(
     webhook_router,
     prefix="/webhooks",
     tags=["Webhooks"]
+)
+
+app.include_router(
+    customer360_router,
+    prefix="/customer360",
+    tags=["Customer360"],
+    dependencies=[Depends(verify_request)]
 )
 
 
