@@ -350,8 +350,17 @@ def get_identity_resolution_summary():
         "profiles": profiles
     }
 
-def send_web_clickstream_event():
-
+def send_web_clickstream_event(
+    event_id: str,
+    email: str,
+    contact_id: str,
+    event_type: str,
+    product_sku: str,
+    event_value: int,
+    page_url: str,
+    source_channel: str,
+    campaign_id: str
+):
     dc_token = get_data_cloud_token()
 
     tenant_url = dc_token["instance_url"]
@@ -362,34 +371,33 @@ def send_web_clickstream_event():
     payload = {
         "data": [
             {
-                "event_id": "evt-1002",
-                "email": "agreen@uog.com",
-                "contact_id": "003TEST",
-                "event_type": "quote_request",
-                "product_sku": "SOLAR-PREMIUM",
-                "event_value": 50000,
-                "page_url": "https://example.com/solar",
-                "source_channel": "website",
-                "campaign_id": "FALL2026",
-                "event_timestamp": datetime.now(timezone.utc).strftime(
-                    "%Y-%m-%dT%H:%M:%S.000Z"
-                )
+                "event_id": event_id,
+                "email": email,
+                "contact_id": contact_id,
+                "event_type": event_type,
+                "product_sku": product_sku,
+                "event_value": event_value,
+                "page_url": page_url,
+                "source_channel": source_channel,
+                "campaign_id": campaign_id,
+                "event_timestamp": datetime.now(
+                    timezone.utc
+                ).strftime("%Y-%m-%dT%H:%M:%S.000Z")
             }
         ]
-    }   
+    }
 
     response = requests.post(
-        tenant_url
-        + "/api/v1/ingest/sources/Web_Clickstream_API/WebClickstreamEvent",
+        tenant_url +
+        "/api/v1/ingest/sources/Web_Clickstream_API/WebClickstreamEvent",
         json=payload,
         headers={
-            "Authorization":
-                f"Bearer {dc_token['access_token']}",
+            "Authorization": f"Bearer {dc_token['access_token']}",
             "Content-Type": "application/json"
         },
         timeout=30
     )
-    
+
     response.raise_for_status()
 
     return response.json()
@@ -470,4 +478,43 @@ def get_pipeline_insight_by_account_id(account_id):
         "total_pipeline_amount": float(row[2])
     }
 
- 
+
+def get_datagraph_record(
+    dg_name: str,
+    record_id: str,
+    live: bool = True
+):
+    dc_token = get_data_cloud_token()
+
+    tenant_url = dc_token["instance_url"]
+
+    if not tenant_url.startswith("https://"):
+        tenant_url = "https://" + tenant_url
+
+    endpoint = (
+        f"{tenant_url}/api/v1/dataGraph/"
+        f"{dg_name}/{record_id}"
+    )
+
+    print(endpoint)
+
+    response = requests.get(
+        endpoint,
+        headers={
+            "Authorization": f"Bearer {dc_token['access_token']}",
+            "Content-Type": "application/json"
+        },
+        params={
+            "live": str(live).lower()
+        },
+        timeout=30
+    )
+
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text)
+
+    return {
+        "status_code": response.status_code,
+        "response": response.text
+    }
+

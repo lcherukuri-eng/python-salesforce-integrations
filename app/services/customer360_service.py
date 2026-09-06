@@ -4,7 +4,9 @@ from app.data_cloud_client import (
     get_customer_insights,
     get_pipeline_insight_by_account_id,
     get_unified_profile_by_email,
-    get_website_engagements
+    get_website_engagements,
+    get_datagraph_record,
+    send_web_clickstream_event
 )
 
 from app.services.claude_service import ( 
@@ -121,3 +123,143 @@ async def get_ai_customer_360_summary(
         "account_name": account_name,
         "summary": summary
     }
+
+
+def get_customer_graph_context(
+    account_id: str
+):
+    return get_datagraph_record(
+        dg_name="AccountOnlyGraph",
+        record_id=account_id
+    )
+
+def log_customer_event(
+    event_id: str,
+    email: str,
+    contact_id: str,
+    event_type: str,
+    product_sku: str,
+    event_value: int,
+    page_url: str,
+    source_channel: str,
+    campaign_id: str
+):
+    return send_web_clickstream_event(
+        event_id=event_id,
+        email=email,
+        contact_id=contact_id,
+        event_type=event_type,
+        product_sku=product_sku,
+        event_value=event_value,
+        page_url=page_url,
+        source_channel=source_channel,
+        campaign_id=campaign_id
+    )
+
+def get_customer_context_and_log_event(
+    account_id: str,
+    event_id: str,
+    email: str,
+    contact_id: str,
+    event_type: str,
+    product_sku: str,
+    event_value: int
+):
+    
+    customer = get_customer_graph_context(account_id)
+
+    event_response = log_customer_event(
+        event_id=event_id,
+        email=email,
+        contact_id=contact_id,
+        event_type=event_type,
+        product_sku=product_sku,
+        event_value=event_value,
+        page_url="https://mcp-demo.com",
+        source_channel="mcp",
+        campaign_id="MCP_DEMO"
+    )
+
+    return {
+        "customer": customer,
+        "event_result": event_response
+    }
+
+async def summarize_customer_context(
+    account_id: str
+):
+    graph_data = get_customer_graph_context(account_id)
+
+    prompt = f"""
+    You are a Salesforce Customer Success Advisor.
+
+    Customer Data:
+    {graph_data}
+
+    Provide:
+
+    1. Customer Overview
+    2. Account Type Analysis
+    3. Potential Business Interest
+    4. Suggested Next Best Action
+    5. Recommended Follow-up Strategy
+    """
+
+    summary = await ask_claude(prompt)
+
+    return {
+        "customer_data": graph_data,
+        "summary": summary
+    }
+
+async def customer_interaction_summary(
+    account_id: str,
+    event_id: str,
+    email: str,
+    contact_id: str,
+    event_type: str,
+    product_sku: str,
+    event_value: int
+):
+    customer = get_customer_graph_context(account_id)
+
+    event_result = log_customer_event(
+        event_id=event_id,
+        email=email,
+        contact_id=contact_id,
+        event_type=event_type,
+        product_sku=product_sku,
+        event_value=event_value,
+        page_url="https://mcp-demo.com",
+        source_channel="mcp",
+        campaign_id="MCP_DEMO"
+    )
+
+    prompt = f"""
+    You are a Salesforce Customer Success Advisor.
+
+    Customer Information:
+    {customer}
+
+    Recent Activity:
+    {event_type}
+
+    Product:
+    {product_sku}
+
+    Provide:
+    1. Customer Overview
+    2. Buying Intent Assessment
+    3. Risk Indicators
+    4. Next Best Action
+    5. Recommended Follow-up Message
+    """
+
+    summary = await ask_claude(prompt)
+
+    return {
+        "customer": customer,
+        "event_result": event_result,
+        "summary": summary
+    }
+
