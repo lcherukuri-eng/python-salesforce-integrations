@@ -5,9 +5,24 @@ from app.oauth_client_credentials import (
 )
 from app.services.claude_service import ask_claude
 from datetime import datetime, timezone
+from app.core.token_cache import TokenCache
+from app.logger import get_logger
+
+logger = get_logger(__name__)
+
+data_cloud_token_cache = TokenCache()
 
 
 def get_data_cloud_token():
+
+    cached_token = data_cloud_token_cache.get_token()
+
+    if cached_token:
+        logger.info("Using cached Data Cloud token")
+        return cached_token
+
+    logger.info("Requesting Data Cloud token")
+
     core_token = get_client_credentials_token()
 
     payload = {
@@ -31,7 +46,17 @@ def get_data_cloud_token():
     )
 
     response.raise_for_status()
-    return response.json()
+
+    token_data = response.json()
+
+    logger.info("New Data Cloud token received")
+
+    data_cloud_token_cache.set_token(
+        token_data,
+        token_data["expires_in"]   # 7200 seconds
+    )
+
+    return token_data
 
 
 def run_query(sql):

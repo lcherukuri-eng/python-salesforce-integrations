@@ -2,8 +2,14 @@ import os
 import requests
 
 from dotenv import load_dotenv
+from app.core.token_cache import TokenCache
+from app.logger import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv()
+
+salesforce_token_cache = TokenCache()
 
 TOKEN_URL = (
     os.getenv("SF_MY_DOMAIN_URL")
@@ -12,6 +18,14 @@ TOKEN_URL = (
 
 
 def get_client_credentials_token():
+
+    cached_token = salesforce_token_cache.get_token()
+
+    if cached_token:
+        logger.info("Using cached Salesforce token")
+        return  cached_token
+
+    logger.info("Cache miss - requesting new Salesforce token")
 
     payload = {
         "grant_type": "client_credentials",
@@ -35,4 +49,10 @@ def get_client_credentials_token():
         timeout=30
     )
 
-    return response.json()
+    token_data = response.json()
+
+    logger.info("New token received from Salesforce")
+
+    salesforce_token_cache.set_token(token_data)   
+
+    return token_data
