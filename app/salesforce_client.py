@@ -1,7 +1,8 @@
-import requests
 import pandas as pd
 from app.s3_client import upload_file_to_s3
 import os
+from app.oauth_client_credentials import refresh_salesforce_token
+from app.core.request_helper import salesforce_request
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -10,6 +11,7 @@ API_VERSION = os.getenv(
     "SF_API_VERSION",
     "v67.0"
 )
+
 
 def get_accounts_dataframe(
         access_token,
@@ -38,11 +40,13 @@ def get_accounts_dataframe(
             f"Bearer {access_token}"
     }
 
-    response = requests.get(
+    response = salesforce_request(
+        "GET",
         url,
         headers=headers,
-        params={"q": query}
-    ) 
+        params={"q": query},
+        refresh_token=refresh_salesforce_token
+    )
 
     records = response.json()["records"]
 

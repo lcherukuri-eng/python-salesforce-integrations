@@ -17,7 +17,14 @@ TOKEN_URL = (
 )
 
 
-def get_client_credentials_token():
+def get_client_credentials_token(
+    force_refresh: bool = False
+):
+    if force_refresh:
+        logger.info(
+            "Force-refreshing Salesforce token"
+        )
+        salesforce_token_cache.clear()
 
     cached_token = salesforce_token_cache.get_token()
 
@@ -56,3 +63,8 @@ def get_client_credentials_token():
     salesforce_token_cache.set_token(token_data)   
 
     return token_data
+
+def refresh_salesforce_token():
+    return get_client_credentials_token(
+        force_refresh=True
+    )

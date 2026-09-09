@@ -4,6 +4,7 @@ from app.oauth_client_credentials import (
     get_client_credentials_token
 )
 from app.services.claude_service import ask_claude
+from app.core.request_helper import data_cloud_request
 from datetime import datetime, timezone
 from app.core.token_cache import TokenCache
 from app.logger import get_logger
@@ -12,8 +13,20 @@ logger = get_logger(__name__)
 
 data_cloud_token_cache = TokenCache()
 
+def refresh_data_cloud_token():
+    return get_data_cloud_token(
+        force_refresh=True
+    )
 
-def get_data_cloud_token():
+
+def get_data_cloud_token(
+    force_refresh: bool = False
+):
+    if force_refresh:
+        logger.info(
+            "Force-refreshing Data Cloud token"
+        )
+        data_cloud_token_cache.clear()
 
     cached_token = data_cloud_token_cache.get_token()
 
@@ -67,15 +80,16 @@ def run_query(sql):
     if not tenant_url.startswith("https://"):
         tenant_url = "https://" + tenant_url
 
-    response = requests.post(
+    response = data_cloud_request(
+        "POST",
         tenant_url + "/api/v2/query",
-        json={"sql": sql},
         headers={
             "Authorization":
                 f"Bearer {dc_token['access_token']}",
             "Content-Type": "application/json"
         },
-        timeout=30
+        json={"sql": sql},
+        refresh_token=refresh_data_cloud_token
     )
 
     response.raise_for_status()

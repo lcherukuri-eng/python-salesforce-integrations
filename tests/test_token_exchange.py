@@ -1,6 +1,6 @@
 import requests
 
-from oauth_client_credentials import (
+from app.oauth_client_credentials import (
     get_client_credentials_token
 )
 
