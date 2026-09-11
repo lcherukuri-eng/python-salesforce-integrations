@@ -13,7 +13,7 @@ API_VERSION = os.getenv(
 )
 
 
-def get_accounts_dataframe(
+async def get_accounts_dataframe(
         access_token,
         instance_url
 ):
@@ -40,7 +40,7 @@ def get_accounts_dataframe(
             f"Bearer {access_token}"
     }
 
-    response = salesforce_request(
+    response = await salesforce_request(
         "GET",
         url,
         headers=headers,
@@ -61,12 +61,12 @@ def get_accounts_dataframe(
 
     return df
 
-def get_accounts(
+async def get_accounts(
         access_token,
         instance_url
 ):
 
-    df = get_accounts_dataframe(
+    df = await get_accounts_dataframe(
         access_token,
         instance_url
     )
@@ -75,12 +75,12 @@ def get_accounts(
         orient="records"
     )
 
-def export_accounts_to_csv(
+async def export_accounts_to_csv(
         access_token,
         instance_url
 ):
 
-    df = get_accounts_dataframe(
+    df = await get_accounts_dataframe(
         access_token,
         instance_url
     )   
@@ -95,12 +95,12 @@ def export_accounts_to_csv(
         "records_exported": len(df)
     }
 
-def export_accounts_to_s3(
+async def export_accounts_to_s3(
         access_token,
         instance_url
 ):
 
-    df = get_accounts_dataframe(
+    df = await get_accounts_dataframe(
         access_token,
         instance_url
     )
@@ -122,12 +122,12 @@ def export_accounts_to_s3(
             len(df)
     }
 
-def analyze_accounts(
+async def analyze_accounts(
         access_token,
         instance_url
 ):
 
-    df = get_accounts_dataframe(
+    df = await get_accounts_dataframe(
         access_token,
         instance_url
     )

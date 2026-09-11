@@ -1,10 +1,9 @@
-import time
 from io import StringIO
-
 import pandas as pd
-import requests
+import asyncio
 import os
 from app.s3_client import upload_file_to_s3
+from app.core.request_helper import client
 
 API_VERSION = os.getenv(
     "SF_API_VERSION",
@@ -12,7 +11,7 @@ API_VERSION = os.getenv(
 )
 
 
-def bulk_export_accounts(access_token, instance_url):
+async def bulk_export_accounts(access_token, instance_url):
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
@@ -24,7 +23,7 @@ def bulk_export_accounts(access_token, instance_url):
         f"{API_VERSION}/jobs/query"
     )
 
-    job_response = requests.post(
+    job_response = await client.post(
         jobs_url,
         headers=headers,
         json={
@@ -42,7 +41,7 @@ def bulk_export_accounts(access_token, instance_url):
     status_url = f"{jobs_url}/{job_id}"
 
     for _ in range(30):
-        status_response = requests.get(
+        status_response = await client.get(
             status_url,
             headers=headers,
             timeout=30,
@@ -59,7 +58,7 @@ def bulk_export_accounts(access_token, instance_url):
                 f"Bulk job {job_id} ended with state {state}"
             )
 
-        time.sleep(2)
+        await asyncio.sleep(2)
     else:
         raise TimeoutError(
             f"Bulk job {job_id} did not finish"
@@ -68,7 +67,7 @@ def bulk_export_accounts(access_token, instance_url):
     # Download CSV results
     results_url = f"{status_url}/results"
 
-    results_response = requests.get(
+    results_response = await client.get(
         results_url,
         headers={
             "Authorization": f"Bearer {access_token}",

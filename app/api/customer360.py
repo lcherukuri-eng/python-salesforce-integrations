@@ -10,13 +10,13 @@ router = APIRouter()
 
 
 @router.get("/customer-360/{email}")
-def customer_360(email: str):
-    return get_customer_360(email)
+async def customer_360(email: str):
+    return await get_customer_360(email)
 
 
 @router.get("/customer-360/account/{account_name}")
-def account_customer_360(account_name: str):
-    return get_account_360(account_name)
+async def account_customer_360(account_name: str):
+    return await get_account_360(account_name)
 
 
 @router.get(

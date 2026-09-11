@@ -18,56 +18,54 @@ from app.data_cloud_client import (
 router = APIRouter()
 
 @router.get("/accounts")
-def data_cloud_accounts():
+async def data_cloud_accounts():
 
-    return get_data_cloud_accounts()
+    return await get_data_cloud_accounts()
 
 @router.get("/accounts/{account_name}")
-def data_cloud_account(account_name: str):
+async def data_cloud_account(account_name: str):
 
-    return get_account_by_name(
+    return await get_account_by_name(
         account_name
     )
 
 @router.get("/search")
-def search_accounts(
+async def search_accounts(
     q: str
 ):
-
-    return search_account(q)
+    return await search_account(q)
 
 @router.get("/opportunities")
-def data_cloud_opportunities():
+async def data_cloud_opportunities():
 
-    return get_opportunities()
+    return await get_opportunities()
 
 @router.get("/customer-context/{account_name}")
-def customer_context(
+async def customer_context(
     account_name: str
 ):
 
-    return get_customer_context(
+    return await get_customer_context(
         account_name
     )
 
 @router.get("/customer-insights/{account_name}")
-def customer_insights(
+async def customer_insights(
     account_name: str
 ):
-
-    return get_customer_insights(
+    return await get_customer_insights(
         account_name
     )
 
 @router.get("/calculated-insights")
-def calculated_insights():
+async def calculated_insights():
 
-    return get_account_pipeline_insights()
+    return await get_account_pipeline_insights()
 
 @router.get("/top-pipeline-account")
-def top_pipeline_account():
+async def top_pipeline_account():
 
-    insights = get_account_pipeline_insights()
+    insights = await get_account_pipeline_insights()
 
     return max(
         insights,
@@ -81,17 +79,17 @@ async def ai_pipeline_summary():
     return await get_ai_pipeline_summary()
 
 @router.get("/identity-resolution/summary")
-def identity_resolution_summary():
-    return get_identity_resolution_summary()
+async def identity_resolution_summary():
+    return await get_identity_resolution_summary()
 
 @router.post("/clickstream/test")
-def clickstream_test():
-    return send_web_clickstream_event()
+async def clickstream_test():
+    return await send_web_clickstream_event()
 
 @router.get("/website-engagements")
-def website_engagements():
-    return get_website_engagements()
+async def website_engagements():
+    return await get_website_engagements()
 
 @router.get("/identity-resolution/{email}")
-def identity_resolution_lookup(email: str):
-    return get_identity_resolution_by_email(email)
+async def identity_resolution_lookup(email: str):
+    return await get_identity_resolution_by_email(email)

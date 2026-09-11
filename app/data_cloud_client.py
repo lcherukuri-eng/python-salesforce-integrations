@@ -1,5 +1,5 @@
 import requests
-
+from app.core.request_helper import client
 from app.oauth_client_credentials import (
     get_client_credentials_token
 )
@@ -72,7 +72,7 @@ def get_data_cloud_token(
     return token_data
 
 
-def run_query(sql):
+async def run_query(sql):
     dc_token = get_data_cloud_token()
 
     tenant_url = dc_token["instance_url"]
@@ -80,7 +80,7 @@ def run_query(sql):
     if not tenant_url.startswith("https://"):
         tenant_url = "https://" + tenant_url
 
-    response = data_cloud_request(
+    response = await data_cloud_request(
         "POST",
         tenant_url + "/api/v2/query",
         headers={
@@ -96,7 +96,7 @@ def run_query(sql):
     return response.json()
 
 
-def get_data_cloud_accounts():
+async def get_data_cloud_accounts():
 
     sql = """
     SELECT
@@ -108,7 +108,7 @@ def get_data_cloud_accounts():
     LIMIT 10
     """
 
-    result = run_query(sql)    
+    result = await run_query(sql)    
 
     accounts = []
 
@@ -124,7 +124,7 @@ def get_data_cloud_accounts():
     return accounts
 
 
-def get_account_by_name(account_name):
+async def get_account_by_name(account_name):
 
     sql = f"""
     SELECT
@@ -136,7 +136,7 @@ def get_account_by_name(account_name):
     WHERE "ssot__Name__c" = '{account_name}'
     """
 
-    result = run_query(sql)
+    result = await run_query(sql)
 
     if not result["data"]:
         return {
@@ -152,7 +152,7 @@ def get_account_by_name(account_name):
         "account_type": row[3]
     }
 
-def search_account(account_name):
+async def search_account(account_name):
 
     sql = f"""
     SELECT
@@ -166,7 +166,7 @@ def search_account(account_name):
     LIMIT 10
     """
 
-    result = run_query(sql)
+    result = await run_query(sql)
 
     accounts = []
 
@@ -181,7 +181,7 @@ def search_account(account_name):
     return accounts
 
 
-def get_opportunities():
+async def get_opportunities():
 
     sql = """
     SELECT
@@ -195,7 +195,7 @@ def get_opportunities():
     LIMIT 10
     """
 
-    result = run_query(sql)
+    result = await run_query(sql)
 
     opportunities = []
 
@@ -212,7 +212,7 @@ def get_opportunities():
 
     return opportunities
 
-def get_opportunities_by_account_id(account_id):
+async def get_opportunities_by_account_id(account_id):
 
     sql = f"""
     SELECT
@@ -226,7 +226,7 @@ def get_opportunities_by_account_id(account_id):
     WHERE "ssot__CustomerAccountId__c" = '{account_id}'
     """
 
-    result = run_query(sql)
+    result = await run_query(sql)
 
     opportunities = []
 
@@ -243,14 +243,14 @@ def get_opportunities_by_account_id(account_id):
 
     return opportunities
 
-def get_customer_context(account_name):
+async def get_customer_context(account_name):
 
-    account = get_account_by_name(
+    account = await get_account_by_name(
         account_name
     )
 
     opportunities = (
-        get_opportunities_by_account_id(
+        await get_opportunities_by_account_id(
             account["id"]
         )
     )
@@ -260,9 +260,9 @@ def get_customer_context(account_name):
         "opportunities": opportunities
     }
 
-def get_customer_insights(account_name):
+async def get_customer_insights(account_name):
 
-    context = get_customer_context(account_name)
+    context = await get_customer_context(account_name)
 
     closed_won_amount = sum(
         opp["amount"]
@@ -291,7 +291,7 @@ def get_customer_insights(account_name):
         "open_pipeline_amount": open_pipeline_amount
     }
 
-def get_account_pipeline_insights():
+async def get_account_pipeline_insights():
 
     sql = """
     SELECT
@@ -305,7 +305,7 @@ def get_account_pipeline_insights():
     LIMIT 10
     """
 
-    result = run_query(sql)
+    result = await run_query(sql)
 
     insights = []
 
@@ -321,7 +321,7 @@ def get_account_pipeline_insights():
     
 async def get_ai_pipeline_summary():
 
-    insights = get_account_pipeline_insights()
+    insights = await get_account_pipeline_insights()
 
     prompt = f"""
     You are a Salesforce Revenue Operations Analyst.
@@ -347,7 +347,7 @@ async def get_ai_pipeline_summary():
         "summary": await ask_claude(prompt)
     }
 
-def get_unified_individuals():
+async def get_unified_individuals():
     """
     Returns Unified Individuals created by
     Data Cloud Identity Resolution.
@@ -365,12 +365,12 @@ def get_unified_individuals():
     LIMIT 100
     """
 
-    return run_query(sql)
+    return await run_query(sql)
 
 
-def get_identity_resolution_summary():
+async def get_identity_resolution_summary():
 
-    result = get_unified_individuals()
+    result = await get_unified_individuals()
 
     profiles = []
 
@@ -389,7 +389,7 @@ def get_identity_resolution_summary():
         "profiles": profiles
     }
 
-def send_web_clickstream_event(
+async def send_web_clickstream_event(
     event_id: str,
     email: str,
     contact_id: str,
@@ -426,7 +426,7 @@ def send_web_clickstream_event(
         ]
     }
 
-    response = requests.post(
+    response = await client.post(
         tenant_url +
         "/api/v1/ingest/sources/Web_Clickstream_API/WebClickstreamEvent",
         json=payload,
@@ -441,7 +441,7 @@ def send_web_clickstream_event(
 
     return response.json()
 
-def get_website_engagements():   
+async def get_website_engagements():   
 
     sql = """
     SELECT
@@ -458,9 +458,9 @@ def get_website_engagements():
     LIMIT 100
     """
 
-    return run_query(sql)
+    return await run_query(sql)
 
-def get_unified_profile_by_email(email):   
+async def get_unified_profile_by_email(email):   
 
     sql = f"""
     SELECT
@@ -471,11 +471,11 @@ def get_unified_profile_by_email(email):
     WHERE ssot__EmailAddress__c = '{email}'
     """
 
-    return run_query(sql)
+    return await run_query(sql)
 
-def get_identity_resolution_by_email(email):
+async def get_identity_resolution_by_email(email):
 
-    result = get_unified_profile_by_email(email)
+    result = await get_unified_profile_by_email(email)
 
     profiles = []
 
@@ -493,7 +493,7 @@ def get_identity_resolution_by_email(email):
     }
 
 
-def get_pipeline_insight_by_account_id(account_id):
+async def get_pipeline_insight_by_account_id(account_id):
 
     sql = f"""
     SELECT
@@ -504,7 +504,7 @@ def get_pipeline_insight_by_account_id(account_id):
     WHERE "CustomerAccountId__c" = '{account_id}'
     """
 
-    result = run_query(sql)
+    result = await run_query(sql)
 
     if not result["data"]:
         return None
@@ -518,7 +518,7 @@ def get_pipeline_insight_by_account_id(account_id):
     }
 
 
-def get_datagraph_record(
+async def get_datagraph_record(
     dg_name: str,
     record_id: str,
     live: bool = True
@@ -537,7 +537,7 @@ def get_datagraph_record(
 
     print(endpoint)
 
-    response = requests.get(
+    response = await client.get(
         endpoint,
         headers={
             "Authorization": f"Bearer {dc_token['access_token']}",

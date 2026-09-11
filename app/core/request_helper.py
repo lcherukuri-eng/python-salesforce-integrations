@@ -1,5 +1,6 @@
 import logging
 import requests
+import httpx
 
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -8,6 +9,9 @@ from collections.abc import Callable
 logger = logging.getLogger(__name__)
 
 session = requests.session()
+HTTP_TIMEOUT = 30
+
+client = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
 
 retry_strategy = Retry(
     total=3,
@@ -40,7 +44,7 @@ logger.info(
 )
 
 
-def salesforce_request(
+async def salesforce_request(
     method: str,
     url: str,
     headers: dict,
@@ -54,7 +58,7 @@ def salesforce_request(
         f"Salesforce {method} request"
     )
 
-    response = session.request(
+    response = await client.request(
         method=method,
         url=url,
         headers=headers,
@@ -75,13 +79,15 @@ def salesforce_request(
 
         new_token_data = refresh_token()
 
+        logger.info("Retrying request with refreshed token")
+
         retry_headers = headers.copy()
 
         retry_headers["Authorization"] = (
             f"Bearer {new_token_data['access_token']}"
         )
 
-        response = session.request(
+        response = await client.request(
             method=method,
             url=url,
             headers=retry_headers,
@@ -95,7 +101,7 @@ def salesforce_request(
 
     return response
 
-def data_cloud_request(
+async def data_cloud_request(
     method: str,
     url: str,
     headers: dict,
@@ -109,7 +115,7 @@ def data_cloud_request(
         f"Data Cloud {method} request"
     )
 
-    response = session.request(
+    response = await client.request(
         method=method,
         url=url,
         headers=headers,
@@ -130,13 +136,15 @@ def data_cloud_request(
 
         new_token_data = refresh_token()
 
+        logger.info("Retrying request with refreshed token")
+
         retry_headers = headers.copy()
 
         retry_headers["Authorization"] = (
             f"Bearer {new_token_data['access_token']}"
         )
 
-        response = session.request(
+        response = await client.request(
             method=method,
             url=url,
             headers=retry_headers,

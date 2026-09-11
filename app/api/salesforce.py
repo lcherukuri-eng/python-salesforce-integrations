@@ -18,58 +18,58 @@ from app.bulk_client import bulk_export_accounts
 router = APIRouter()
 
 @router.get("/accounts")
-def accounts(
+async def accounts(
     token=Depends(get_sf_token)
 ):
-    return get_accounts(
+    return await get_accounts(
         token["access_token"],
         token["instance_url"]
     )
 
 
 @router.get("/accounts/export")
-def export_accounts(
+async def export_accounts(
     token = Depends(get_sf_token)
 ):
 
-    return export_accounts_to_csv(
+    return await export_accounts_to_csv(
         token["access_token"],
         token["instance_url"]
     )
 
 @router.get("/accounts/export/s3")
-def export_accounts_s3(
+async def export_accounts_s3(
     token = Depends(get_sf_token)
 ):
 
-    return export_accounts_to_s3(
+    return await export_accounts_to_s3(
         token["access_token"],
         token["instance_url"]
     )
 
 @router.get("/accounts/bulk-export")
-def export_accounts_with_bulk_api(
+async def export_accounts_with_bulk_api(
     token = Depends(get_sf_token)
 ):   
 
-    return bulk_export_accounts(
+    return await bulk_export_accounts(
         token["access_token"],
         token["instance_url"],
     )
 
 @router.get("/data-quality/accounts")
-def account_data_quality(
+async def account_data_quality(
     token = Depends(get_sf_token)
 ):
 
-    return analyze_accounts(
+    return await analyze_accounts(
         token["access_token"],
         token["instance_url"]
     )
 
-def run_s3_export(token):
+async def run_s3_export(token):
 
-    export_accounts_to_s3(
+    await export_accounts_to_s3(
         token["access_token"],
         token["instance_url"]
     )

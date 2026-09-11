@@ -22,7 +22,11 @@ from app.api.data_cloud import router as data_cloud_router
 from app.api.webhooks import router as webhook_router
 from app.api.customer360 import router as customer360_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Customer 360 AI Platform API",
+    description="AI-powered Customer 360 platform integrating Salesforce Data Cloud, Customer 360 APIs, Segments, Calculated Insights, Data Actions, and AWS",
+    version="1.0.0"
+)
 
 app.include_router(
     claude_router,

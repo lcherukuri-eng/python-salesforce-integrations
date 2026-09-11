@@ -1,8 +1,14 @@
 import logging
 from pathlib import Path
 
-LOG_DIRECTORY = Path("logs")
-LOG_DIRECTORY.mkdir(exist_ok=True)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+LOG_DIRECTORY = BASE_DIR / "logs"
+
+LOG_DIRECTORY.mkdir(
+    parents=True,
+    exist_ok=True
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,7 +23,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
 
 def get_logger(name):
     return logging.getLogger(name)
