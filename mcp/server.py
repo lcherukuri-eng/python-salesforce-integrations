@@ -9,7 +9,8 @@ from app.services.customer360_service import (
     get_account_360,
     get_ai_customer_360_summary,
     get_customer_graph_context,
-    customer_interaction_summary
+    customer_interaction_summary,
+    get_customer_intelligence
 )
 
 mcp = MCPServer(
@@ -71,6 +72,17 @@ async def customer_interaction_ai(
         product_sku=product_sku,
         event_value=event_value
     )
+
+@mcp.tool()
+async def customer_intelligence_ai(account_name: str):
+    """
+    Generate AI-powered customer intelligence insights
+    including health score, segment membership, recent
+    activity, risk assessment, confidence score, and
+    next best action recommendations.
+    """
+    
+    return await get_customer_intelligence(account_name)
 
 if __name__ == "__main__":
     import asyncio
