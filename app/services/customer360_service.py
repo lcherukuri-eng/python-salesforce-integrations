@@ -13,6 +13,7 @@ from app.services.claude_service import (
     ask_claude
 )
 import asyncio
+import json
 
 from app.logger import get_logger
 
@@ -204,3 +205,237 @@ async def customer_interaction_summary(
         "summary": summary
     }
 
+def calculate_health_score(insights: dict):
+    BASE_SCORE = 50
+    CLOSED_WON_POINTS = 20
+    OPEN_PIPELINE_POINTS = 20
+    OPPORTUNITY_POINTS = 10
+
+    health_score = BASE_SCORE
+
+    if insights["closed_won_amount"] > 0:
+        health_score += CLOSED_WON_POINTS
+
+    if insights["open_pipeline_amount"] > 100000:
+        health_score += OPEN_PIPELINE_POINTS
+
+    if insights["total_opportunities"] >= 3:
+        health_score += OPPORTUNITY_POINTS
+
+    health_score = min(health_score, 100)
+
+    if health_score >= 80:
+        health_status = "Healthy"
+    elif health_score >= 60:
+        health_status = "Attention Required"
+    else:
+        health_status = "At Risk"
+
+    return {
+        "health_score": health_score,
+        "health_status": health_status
+    }
+
+def build_customer_timeline(
+    opportunities: list
+):
+    timeline = []
+
+    for opp in opportunities:
+        timeline.append(
+            {
+                "event": f"{opp['stage']} - {opp['name']}",
+                "amount": opp["amount"],
+                "date": opp["close_date"]
+            }
+        )
+
+    timeline = sorted(
+        timeline,
+        key=lambda x: x["date"],
+        reverse=True
+    )
+
+    return timeline
+
+def build_recent_activity(
+    engagements: list
+):
+    activity_map = {
+        "Product_View": "Viewed Product",
+        "product_view": "Viewed Product",
+        "quote_request": "Requested Quote"
+    }
+
+    engagements = sorted(
+        engagements,
+        key=lambda row: row[3],
+        reverse=True
+    )
+
+    activities = []
+
+    for row in engagements[:5]:
+        event_type = row[4]
+
+        activities.append(
+            {
+                "activity":
+                    activity_map.get(
+                        event_type,
+                        event_type
+                    ),
+                "date": row[3],
+                "channel": row[2]
+            }
+        )
+
+    return activities
+
+async def get_customer_intelligence(
+    account_name: str
+):
+    customer_360 = await get_account_360(
+        account_name
+    )
+    
+    pipeline_insight = customer_360["pipeline_insight"]
+    segment = (
+        "High Pipeline Accounts"
+        if (
+            pipeline_insight["opportunity_count"] >= 1
+            and pipeline_insight["total_pipeline_amount"] > 100000
+        )
+        else None
+    )
+
+    website_engagements = await get_website_engagements()
+    recent_activity = build_recent_activity(
+        website_engagements["data"]
+    )
+
+
+    opportunities = customer_360["opportunities"]
+    timeline = build_customer_timeline(
+        opportunities
+    )
+
+    insights = customer_360["insights"]    
+
+    health_metrics = calculate_health_score(
+        insights
+    )   
+
+    prompt = f"""
+    You are a Customer Success Analyst.
+
+    Customer:
+    {customer_360}
+
+    Segment:
+    {segment}
+
+    Timeline:
+    {timeline}
+
+    Health Score:
+    {health_metrics["health_score"]}
+
+    Health Status:
+    {health_metrics['health_status']}
+
+    Recent Activity:
+    {recent_activity}
+
+    Return ONLY valid JSON.
+
+    Format:
+
+    {{
+        "customer_overview": "",
+        "pipeline_assessment": "",
+        "risk_level": "",
+        "confidence": "",
+        "top_opportunity": "",
+        "recommended_action": ""
+    }}
+
+    Determine:
+    
+    - risk_level: Low, Medium, High
+    - confidence: Low, Medium, High
+
+    Base your assessment on:
+    - Health Score
+    - Segment Membership
+    - Pipeline Amount
+    - Opportunity Stages
+    - Recent Activity
+    
+    Use actual values from the data.
+
+    Do not return markdown.
+    Do not return explanations.
+    Do not wrap in code blocks.
+    Return JSON only.
+    """
+
+    ai_analysis = await ask_claude(
+        prompt
+    )
+
+    # Remove markdown code fence if Claude adds it
+    ai_analysis = ai_analysis.strip()
+
+    if ai_analysis.startswith("```json"):
+        ai_analysis = ai_analysis.replace("```json","",1)
+
+    if ai_analysis.endswith("```"):
+        ai_analysis = ai_analysis[:-3]
+
+    ai_analysis = ai_analysis.strip()
+
+    try:
+        ai_analysis = json.loads(ai_analysis)
+    except Exception as e:
+        print("JSON Parse Error:", e)
+
+
+    nba_prompt = f"""
+    You are a Customer Success Manager.
+
+    Customer:
+    {customer_360}
+
+    Segment:
+    {segment}
+
+    Health Score:
+    {health_metrics["health_score"]}
+
+    Timeline:
+    {timeline}
+
+    Recent Activity:
+    {recent_activity}
+
+    Provide ONE specific next best action.
+
+    Return only one sentence.
+    """
+
+    priority_action = await ask_claude(
+        nba_prompt
+    )
+
+    return {
+        "account_name": account_name,
+        "segment": segment,
+        "health_score": health_metrics["health_score"],
+        "health_status": health_metrics["health_status"],
+        "timeline": timeline,
+        "recent_activity": recent_activity,
+        "priority_action": priority_action,
+        "ai_analysis": ai_analysis,
+        "customer_360": customer_360        
+    }

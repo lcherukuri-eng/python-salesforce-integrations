@@ -1,6 +1,6 @@
-# Python Salesforce Integrations
+# Customer Intelligence Platform
 
-A headless Salesforce integration platform built using Python, FastAPI, Salesforce APIs, Pandas, and AWS S3.
+An AI-powered customer intelligence platform built with Python, FastAPI, Salesforce Data Cloud, MCP, Claude AI, and AWS. The platform combines Customer 360 data, segmentation, behavioral analytics, calculated insights, and AI-driven recommendations to provide actionable customer intelligence.
 
 ## Technologies
 - Python
@@ -14,6 +14,7 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - boto3
 - Salesforce Data Cloud
 - Claude
+- MCP (Model Context Protocol)
 
 ## Features
 
@@ -30,29 +31,43 @@ A headless Salesforce integration platform built using Python, FastAPI, Salesfor
 - Bulk API 2.0 Export
 
 ### Data Cloud Integration
-- Data Stream ingestion for Account, Contact, and Opportunity
+- Data Stream Ingestion (Account, Contact, Opportunity)
 - Data Cloud Token Exchange
-- Data Cloud Query API integration
-- Data Cloud Ingestion API Integration
-- Customer Search APIs
-- Customer Context APIs
-- Customer Insights APIs
-- Calculated Insights APIs
-- Identity Resolution Integration
+- Data Cloud Query API
+- Data Cloud Ingestion API
+- Identity Resolution
 - Unified Individual APIs
 - Unified Contact Point Email APIs
 - Customer 360 APIs
+- Calculated Insights Integration
+- Data Cloud Segmentation
 - Website Engagement DMO Integration
 - Website Engagement Event Tracking
 - Clickstream Event Ingestion and Retrieval
 
-### AI Pipeline Analysis
-- Claude Integration
+### AI-Powered Customer Intelligence
+- Customer 360 Account Intelligence
+- Health Score and Health Status
+- Opportunity Timeline Generation
+- Website Engagement Activity Analysis
+- Segment Classification
+- AI Risk Assessment
+- Confidence Scoring
+- Next Best Action Recommendations
 - AI-generated Executive Pipeline Summaries
-- Pipeline Risk and Opportunity Analysis
+- Opportunity Risk Analysis
 - Revenue Pipeline Recommendations
+- Claude-powered Customer Intelligence
 - Async Anthropic API Integration
 - Async FastAPI AI Endpoints
+
+### MCP Integration
+- Model Context Protocol (MCP) Server
+- Claude Desktop Integration
+- Customer 360 MCP Tools
+- Customer Intelligence MCP Tools
+- Event Ingestion MCP Tools
+- AI-powered Customer Interaction Workflows
 
 ### Analytics
 - Account Data Quality Analysis

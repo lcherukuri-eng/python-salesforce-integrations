@@ -533,9 +533,7 @@ async def get_datagraph_record(
     endpoint = (
         f"{tenant_url}/api/v1/dataGraph/"
         f"{dg_name}/{record_id}"
-    )
-
-    print(endpoint)
+    )    
 
     response = await client.get(
         endpoint,
@@ -547,10 +545,7 @@ async def get_datagraph_record(
             "live": str(live).lower()
         },
         timeout=30
-    )
-
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text)
+    )    
 
     return {
         "status_code": response.status_code,
