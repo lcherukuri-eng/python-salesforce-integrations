@@ -15,6 +15,10 @@ from app.services.claude_service import (
 import asyncio
 import json
 
+from app.models.customer_intelligence import (
+    CustomerIntelligenceResponse
+)
+
 from app.logger import get_logger
 
 logger = get_logger(__name__)
@@ -294,10 +298,27 @@ def build_recent_activity(
 
 async def get_customer_intelligence(
     account_name: str
-):
+) -> CustomerIntelligenceResponse:
+
+    logger.info(
+        "Starting customer intelligence analysis for {account_name}"
+    )
+
     customer_360 = await get_account_360(
         account_name
     )
+
+    logger.info(
+        f"Retrieved account data for {account_name}"
+    )
+
+    if not customer_360:        
+        logger.error(
+            f"Account not found: {account_name}"
+        )
+        raise ValueError(
+            f"Account not found: {account_name}"
+        )
     
     pipeline_insight = customer_360["pipeline_insight"]
     segment = (
@@ -310,10 +331,12 @@ async def get_customer_intelligence(
     )
 
     website_engagements = await get_website_engagements()
+
+    logger.info("Retrieved website engagements")
+
     recent_activity = build_recent_activity(
         website_engagements["data"]
     )
-
 
     opportunities = customer_360["opportunities"]
     timeline = build_customer_timeline(
@@ -397,8 +420,14 @@ async def get_customer_intelligence(
 
     try:
         ai_analysis = json.loads(ai_analysis)
+        logger.info("AI analysis generated successfully")
     except Exception as e:
-        print("JSON Parse Error:", e)
+        logger.error(
+            f"Failed to parse AI analysis JSON: {e}"
+        )        
+        raise ValueError(
+            "Invalid AI analysis JSON response"
+        ) from e
 
 
     nba_prompt = f"""
@@ -428,14 +457,17 @@ async def get_customer_intelligence(
         nba_prompt
     )
 
-    return {
-        "account_name": account_name,
-        "segment": segment,
-        "health_score": health_metrics["health_score"],
-        "health_status": health_metrics["health_status"],
-        "timeline": timeline,
-        "recent_activity": recent_activity,
-        "priority_action": priority_action,
-        "ai_analysis": ai_analysis,
-        "customer_360": customer_360        
-    }
+    logger.info("Priority action generated successfully")
+
+    return CustomerIntelligenceResponse(
+        account_name=account_name,
+        segment=segment,
+        health_score=health_metrics["health_score"],
+        health_status=health_metrics["health_status"],
+        timeline=timeline,
+        recent_activity=recent_activity,
+        priority_action=priority_action.strip(),
+        ai_analysis=ai_analysis,
+        customer_360=customer_360
+    )
+
