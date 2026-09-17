@@ -1,48 +1,28 @@
 import logging
-import requests
-import httpx
+from httpx import AsyncClient
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
-session = requests.session()
 HTTP_TIMEOUT = 30
 
-client = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
+client: AsyncClient | None = None
 
-retry_strategy = Retry(
-    total=3,
-    backoff_factor=1,
-    status_forcelist=[
-        429,
-        500,
-        502,
-        503,
-        504
-    ]
-)
+async def initialize_client():
+    global client
 
-adapter = HTTPAdapter(
-    max_retries=retry_strategy
-)
+    client = AsyncClient(timeout=HTTP_TIMEOUT)
+    
+    logger.info("Async HTTP client initialized")
 
-session.mount(
-    "https://",
-    adapter
-)
+async def close_client():
+    global client
 
-session.mount(
-    "http://",
-    adapter
-)
+    if client is not None:
+        await client.aclose()
 
-logger.info(
-    "Session initialized with retry strategy"
-)
-
+        logger.info("Async HTTP client closed")
 
 async def salesforce_request(
     method: str,
@@ -54,6 +34,12 @@ async def salesforce_request(
     timeout=30,
     refresh_token: Callable | None = None
 ):
+
+    if client is None:
+        raise RuntimeError(
+            "HTTP client has not been initialized"
+        )
+    
     logger.info(
         f"Salesforce {method} request"
     )
@@ -111,6 +97,12 @@ async def data_cloud_request(
     timeout=30,
     refresh_token: Callable | None = None
 ):
+
+    if client is None:
+            raise RuntimeError(
+                "HTTP client has not been initialized"
+            )
+    
     logger.info(
         f"Data Cloud {method} request"
     )

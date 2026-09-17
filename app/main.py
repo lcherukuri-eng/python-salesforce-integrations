@@ -1,11 +1,9 @@
 from fastapi import (
     FastAPI,
-    BackgroundTasks,
     Depends
 )
 from fastapi.responses import RedirectResponse
 from app.security import verify_request
-from app.dependencies import get_sf_token
 
 from app.oauth_client import (
     get_authorization_url,
@@ -22,11 +20,35 @@ from app.api.data_cloud import router as data_cloud_router
 from app.api.webhooks import router as webhook_router
 from app.api.customer360 import router as customer360_router
 
+from app.middleware.timing_middleware import timing_middleware
+
+from contextlib import asynccontextmanager
+
+from app.core.request_helper import (
+    initialize_client,
+    close_client
+)
+
+@asynccontextmanager
+async def lifespan(app):
+
+    await initialize_client()
+
+    yield
+
+    await close_client()
+
 app = FastAPI(
     title="Customer 360 AI Platform API",
-    description="AI-powered Customer 360 platform integrating Salesforce Data Cloud, Customer 360 APIs, Segments, Calculated Insights, Data Actions, and AWS",
-    version="1.0.0"
+    description=(
+        "AI-powered Customer Intelligence platform built with "
+        "FastAPI, Salesforce Data Cloud, Claude AI, and AWS."
+    ),
+    version="1.0.0",
+    lifespan=lifespan
 )
+
+app.middleware("http")(timing_middleware)
 
 app.include_router(
     claude_router,
