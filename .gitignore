@@ -8,3 +8,4 @@ accounts_bulk.csv
 token.json
 logs/
 *.log
+app/event_consumer/data/*
