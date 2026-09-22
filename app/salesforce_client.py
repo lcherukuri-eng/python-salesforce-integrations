@@ -175,3 +175,28 @@ async def analyze_accounts(
         )
 
     }
+
+async def get_account_by_id(
+    access_token,
+    instance_url,
+    account_id
+):
+    url = (
+        f"{instance_url}/services/data/{API_VERSION}/"
+        f"sobjects/Account/{account_id}"
+    )
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    response = await salesforce_request(
+        "GET",
+        url,
+        headers=headers,
+        refresh_token=refresh_salesforce_token
+    )
+
+    return response.json()
+

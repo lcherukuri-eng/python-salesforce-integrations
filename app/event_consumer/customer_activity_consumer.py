@@ -11,6 +11,11 @@ import os
 import io
 import json
 from fastavro import schemaless_reader
+from app.core.request_helper import (
+    initialize_client,
+    close_client
+)
+from app.salesforce_client import get_account_by_id
 import logging
 
 logger = logging.getLogger(__name__)
@@ -190,16 +195,52 @@ class CustomerActivityConsumer:
         return decoded_event
 
     async def process_event(self, event):
-        customer_id = event.get("Customer_Id__c")
+        account_id = event.get("Customer_Id__c")
         activity_type = event.get("Activity_Type__c")
         activity_source = event.get("Activity_Source__c")
 
         logger.info(
             "Customer=%s Activity=%s Source=%s",
-            customer_id,
+            account_id,
             activity_type,
             activity_source,
         )
+
+        account_name = await self.lookup_account_name(account_id)
+        logger.info(
+            "AccountId=%s AccountName=%s",
+            account_id,
+            account_name
+        )
+        if not account_name:
+            return
+
+    async def lookup_account_name(
+        self,
+        account_id: str
+    ) -> str | None:
+        """
+        Lookup Account Name using Salesforce Account Id.
+        """
+
+        try:
+            account = await get_account_by_id(
+                self.access_token,
+                self.instance_url,
+                account_id
+            )
+
+            return account.get("Name")
+
+        except Exception:
+            logger.exception(
+                "Failed to lookup account for id=%s",
+                account_id
+            )
+
+            return None
+
+    
 
     # Utility method for validating a topic and viewing topic metadata.
     async def get_topic(self):
@@ -224,22 +265,27 @@ class CustomerActivityConsumer:
 
 
 async def main():
-    consumer = CustomerActivityConsumer()
+    await initialize_client()
 
-    await consumer.authenticate()
+    try:
+        consumer = CustomerActivityConsumer()
 
-    while True:
-        try:
-            await consumer.create_stub()
-            await consumer.subscribe()
+        await consumer.authenticate()
 
-        except grpc.RpcError:
-            logger.warning("gRPC connection lost. Reconnecting in 5 seconds...")            
-            await asyncio.sleep(5)
+        while True:
+            try:
+                await consumer.create_stub()
+                await consumer.subscribe()
 
-        except Exception:
-            logger.exception("Unexpected error. Reconnecting in 5 seconds...")
-            await asyncio.sleep(5)
+            except grpc.RpcError:
+                logger.warning(
+                    "gRPC connection lost. Reconnecting in 5 seconds..."
+                )
+
+                await asyncio.sleep(5)
+
+    finally:
+        await close_client()
 
 
 if __name__ == "__main__":
