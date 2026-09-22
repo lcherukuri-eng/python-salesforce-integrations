@@ -9,3 +9,4 @@ token.json
 logs/
 *.log
 app/event_consumer/data/*
+.pytest_cache/

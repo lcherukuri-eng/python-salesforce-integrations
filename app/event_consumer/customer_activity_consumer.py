@@ -64,14 +64,25 @@ class CustomerActivityConsumer:
         last_replay_id = self.get_last_replay_id()
 
         if last_replay_id:
-            logger.info("Using saved replay id: %s", last_replay_id)
+            
+            try:
+                replay_id = bytes.fromhex(last_replay_id)
+                logger.info("Using saved replay id: %s", last_replay_id)
 
-            yield pubsub_api_pb2.FetchRequest(
-                topic_name=self.TOPIC_NAME,
-                replay_preset=pubsub_api_pb2.ReplayPreset.CUSTOM,
-                replay_id=bytes.fromhex(last_replay_id),
-                num_requested=1
-            )
+                yield pubsub_api_pb2.FetchRequest(
+                    topic_name=self.TOPIC_NAME,
+                    replay_preset=pubsub_api_pb2.ReplayPreset.CUSTOM,
+                    replay_id=replay_id,
+                    num_requested=1
+                )
+            except ValueError:
+                logger.warning("Invalid replay id. Falling back to LATEST.")
+
+                yield pubsub_api_pb2.FetchRequest(
+                    topic_name=self.TOPIC_NAME,
+                    replay_preset=pubsub_api_pb2.ReplayPreset.LATEST,
+                    num_requested=1
+                )
 
         else:
             logger.info("No replay id found. Using LATEST")
@@ -140,9 +151,9 @@ class CustomerActivityConsumer:
                 responses.details()
             )
 
-
-        except Exception as e:
+        except grpc.RpcError:
             logger.exception("Subscription failed")
+            raise
 
 
     def get_metadata(self):
@@ -214,9 +225,22 @@ class CustomerActivityConsumer:
 
 async def main():
     consumer = CustomerActivityConsumer()
+
     await consumer.authenticate()
-    await consumer.create_stub()
-    await consumer.subscribe()   
+
+    while True:
+        try:
+            await consumer.create_stub()
+            await consumer.subscribe()
+
+        except grpc.RpcError:
+            logger.warning("gRPC connection lost. Reconnecting in 5 seconds...")            
+            await asyncio.sleep(5)
+
+        except Exception:
+            logger.exception("Unexpected error. Reconnecting in 5 seconds...")
+            await asyncio.sleep(5)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

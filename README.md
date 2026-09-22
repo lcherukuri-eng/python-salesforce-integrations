@@ -7,12 +7,17 @@ An AI-powered customer intelligence platform built with Python, FastAPI, Salesfo
 - FastAPI
 - Salesforce REST API
 - Salesforce Bulk API 2.0
+- Salesforce Data Cloud
+- Salesforce Platform Events
+- Salesforce Pub/Sub API
 - OAuth 2.0
 - PKCE
+- gRPC
+- Protocol Buffers (Protobuf)
 - Pandas
 - AWS S3
 - boto3
-- Salesforce Data Cloud
+- fastavro
 - Claude
 - MCP (Model Context Protocol)
 
@@ -29,6 +34,19 @@ An AI-powered customer intelligence platform built with Python, FastAPI, Salesfo
 - CSV Export
 - AWS S3 Upload
 - Bulk API 2.0 Export
+
+### Event-Driven Integration
+- Salesforce Platform Events
+- Salesforce Pub/Sub API Consumer
+- gRPC-based Event Subscription
+- Protocol Buffers (Protobuf)
+- Avro Payload Decoding
+- Schema Retrieval with GetSchema
+- Schema Caching
+- Replay ID Checkpointing
+- Replay Recovery
+- Automatic Reconnection Handling
+- Event Processing Pipeline
 
 ### Data Cloud Integration
 - Data Stream Ingestion (Account, Contact, Opportunity)
@@ -96,7 +114,19 @@ FastAPI
     ├── Salesforce REST APIs
     ├── Data Cloud Query API
     ├── Data Cloud Ingestion API
-    └── Claude AI
+    ├── Claude AI
+    └── Pub/Sub Consumer
+            ↓
+        Platform Events
+            ↓
+        gRPC / Protobuf
+            ↓
+        Replay Recovery
+            ↓
+        Avro Decoding
+            ↓
+        Event Processing
+    
     ↓
     ├── Pandas
     │   ↓
