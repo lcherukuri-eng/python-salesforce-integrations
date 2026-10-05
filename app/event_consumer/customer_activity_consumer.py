@@ -11,10 +11,6 @@ import os
 import io
 import json
 from fastavro import schemaless_reader
-from app.core.request_helper import (
-    initialize_client,
-    close_client
-)
 from app.salesforce_client import get_account_by_id
 import logging
 
@@ -45,6 +41,10 @@ class CustomerActivityConsumer:
 
     def save_replay_id(self, replay_id):
         self.REPLAY_FILE.write_text(str(replay_id))
+
+    def delete_replay_id(self):
+        if self.REPLAY_FILE.exists():
+            self.REPLAY_FILE.unlink()
 
     async def authenticate(self):
         token = get_sf_token()
@@ -137,8 +137,7 @@ class CustomerActivityConsumer:
             for response in responses:  
 
                 for event in response.events:
-                    self.save_replay_id(event.replay_id.hex())
-
+                    
                     schema_json = await self.get_schema_json(
                         event.event.schema_id
                     )
@@ -148,7 +147,10 @@ class CustomerActivityConsumer:
                         schema_json
                     )
 
-                    await self.process_event(decoded_event)                   
+                    await self.process_event(decoded_event)  
+
+                    self.save_replay_id(event.replay_id.hex())
+                                     
 
             logger.info(
                 "Subscription stream ended. Code=%s Details=%s",
@@ -156,10 +158,21 @@ class CustomerActivityConsumer:
                 responses.details()
             )
 
-        except grpc.RpcError:
+        except grpc.RpcError as e:
+
+            logger.error("Subscription error: %s", e.details())
+
+            if (
+                e.code() == grpc.StatusCode.INVALID_ARGUMENT
+                and "Replay ID" in e.details()
+            ):
+                logger.warning(
+                    "Replay ID is invalid. Deleting saved replay ID."
+                )
+                self.delete_replay_id()
+
             logger.exception("Subscription failed")
             raise
-
 
     def get_metadata(self):
         return (
@@ -194,7 +207,7 @@ class CustomerActivityConsumer:
 
         return decoded_event
 
-    async def process_event(self, event):
+    async def process_event(self, event):       
         account_id = event.get("Customer_Id__c")
         activity_type = event.get("Activity_Type__c")
         activity_source = event.get("Activity_Source__c")
@@ -204,42 +217,7 @@ class CustomerActivityConsumer:
             account_id,
             activity_type,
             activity_source,
-        )
-
-        account_name = await self.lookup_account_name(account_id)
-        logger.info(
-            "AccountId=%s AccountName=%s",
-            account_id,
-            account_name
-        )
-        if not account_name:
-            return
-
-    async def lookup_account_name(
-        self,
-        account_id: str
-    ) -> str | None:
-        """
-        Lookup Account Name using Salesforce Account Id.
-        """
-
-        try:
-            account = await get_account_by_id(
-                self.access_token,
-                self.instance_url,
-                account_id
-            )
-
-            return account.get("Name")
-
-        except Exception:
-            logger.exception(
-                "Failed to lookup account for id=%s",
-                account_id
-            )
-
-            return None
-
+        )     
     
 
     # Utility method for validating a topic and viewing topic metadata.
@@ -264,8 +242,7 @@ class CustomerActivityConsumer:
         )
 
 
-async def main():
-    await initialize_client()
+async def main():  
 
     try:
         consumer = CustomerActivityConsumer()
@@ -277,15 +254,19 @@ async def main():
                 await consumer.create_stub()
                 await consumer.subscribe()
 
-            except grpc.RpcError:
+            except grpc.RpcError as e:
                 logger.warning(
-                    "gRPC connection lost. Reconnecting in 5 seconds..."
+                    "gRPC connection lost. Reconnecting in 5 seconds...",
+                    e.details()
                 )
+                await asyncio.sleep(5)
 
+            except Exception:
+                logger.exception("Unexpected error. Reconnecting in 5 seconds...")
                 await asyncio.sleep(5)
 
     finally:
-        await close_client()
+        logger.info("Subscription loop ended")
 
 
 if __name__ == "__main__":
