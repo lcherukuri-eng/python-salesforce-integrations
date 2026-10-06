@@ -47,6 +47,12 @@ An AI-powered customer intelligence platform built with Python, FastAPI, Salesfo
 - Replay Recovery
 - Automatic Reconnection Handling
 - Event Processing Pipeline
+- Apache Kafka Integration
+- Kafka Producer
+- Kafka Consumer
+- Kafka Topics
+- Consumer Groups
+- Event Streaming Architecture
 
 ### Data Cloud Integration
 - Data Stream Ingestion (Account, Contact, Opportunity)

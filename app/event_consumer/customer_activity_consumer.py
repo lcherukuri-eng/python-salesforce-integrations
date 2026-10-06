@@ -11,7 +11,7 @@ import os
 import io
 import json
 from fastavro import schemaless_reader
-from app.salesforce_client import get_account_by_id
+from app.kafka.kafka_producer import KafkaProducer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,7 @@ class CustomerActivityConsumer:
             self.instance_url = None
             self.stub = None
             self.schema_cache = {}
+            self.kafka_producer = KafkaProducer()
     
 
     def get_last_replay_id(self):
@@ -217,7 +218,11 @@ class CustomerActivityConsumer:
             account_id,
             activity_type,
             activity_source,
-        )     
+        )
+        await self.kafka_producer.publish(
+            os.getenv("KAFKA_TOPIC"),
+            event
+        )    
     
 
     # Utility method for validating a topic and viewing topic metadata.
@@ -243,11 +248,11 @@ class CustomerActivityConsumer:
 
 
 async def main():  
+    consumer = CustomerActivityConsumer()
 
-    try:
-        consumer = CustomerActivityConsumer()
-
+    try:   
         await consumer.authenticate()
+        await consumer.kafka_producer.start()
 
         while True:
             try:
@@ -256,7 +261,7 @@ async def main():
 
             except grpc.RpcError as e:
                 logger.warning(
-                    "gRPC connection lost. Reconnecting in 5 seconds...",
+                    "gRPC connection lost: %s. Reconnecting in 5 seconds...",
                     e.details()
                 )
                 await asyncio.sleep(5)
@@ -266,7 +271,8 @@ async def main():
                 await asyncio.sleep(5)
 
     finally:
-        logger.info("Subscription loop ended")
+        if consumer.kafka_producer:
+            await consumer.kafka_producer.stop()
 
 
 if __name__ == "__main__":
