@@ -19,6 +19,7 @@ from app.api.salesforce import router as salesforce_router
 from app.api.data_cloud import router as data_cloud_router
 from app.api.webhooks import router as webhook_router
 from app.api.customer360 import router as customer360_router
+from app.api.rag import router as rag_router
 
 from app.middleware.timing_middleware import timing_middleware
 
@@ -82,6 +83,12 @@ app.include_router(
     prefix="/customer360",
     tags=["Customer360"],
     dependencies=[Depends(verify_request)]
+)
+
+app.include_router(
+    rag_router,
+    prefix="/rag",
+    tags=["Rag"]
 )
 
 
