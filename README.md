@@ -19,6 +19,11 @@ An AI-powered customer intelligence platform built with Python, FastAPI, Salesfo
 - boto3
 - fastavro
 - Claude
+- OpenAI
+- PostgreSQL
+- pgvector
+- LangChain
+- LangGraph
 - MCP (Model Context Protocol)
 
 ## Features
@@ -85,6 +90,24 @@ An AI-powered customer intelligence platform built with Python, FastAPI, Salesfo
 - Async Anthropic API Integration
 - Async FastAPI AI Endpoints
 
+### Retrieval-Augmented Generation (RAG)
+- OpenAI Embeddings
+- PostgreSQL with pgvector
+- Semantic Vector Search
+- PostgreSQL Full-Text Search
+- Hybrid Search using Vector Similarity and Text Ranking
+- Customer ID Metadata Filtering
+- Retrieval-Augmented Generation (RAG)
+- LangChain Prompt Templates
+- LangChain Document and Metadata Handling
+- Custom LangChain Hybrid Retriever
+- Async LangChain RAG Pipeline
+- LangGraph Workflow Orchestration
+- Relevance-Based Conditional Routing
+- Fallback Handling for Low-Relevance Retrieval
+- Claude-powered Grounded Response Generation
+- Async FastAPI RAG Endpoint
+
 ### MCP Integration
 - Model Context Protocol (MCP) Server
 - Claude Desktop Integration
@@ -147,4 +170,46 @@ FastAPI
         ├── Unified Individual
         ├── Calculated Insights
         └── Website Engagement Events
+```
+
+### RAG Architecture
+
+```text
+User Query
+    ↓
+FastAPI RAG Endpoint
+    ↓
+LangGraph Workflow
+    ↓
+Retrieve Node  
+    ↓
+LangChain Hybrid Retriever
+    ↓
+Hybrid Search
+    ├── OpenAI Query Embedding
+    │       ↓
+    │   pgvector Similarity Search
+    │
+    └── PostgreSQL Full-Text Search
+              ↓
+         Hybrid Ranking
+              ↓
+      LangChain Documents
+              ↓
+       Relevance Check
+          ┌────┴─────┐
+          ↓          ↓
+      Relevant   Low Relevance
+          ↓          ↓
+    Generate Node  Fallback
+          ↓          ↓
+      LangChain     END
+          ↓
+      Claude AI
+          ↓
+    Grounded Answer
+          ↓
+         END
+          ↓
+    API Response
 ```
