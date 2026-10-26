@@ -552,3 +552,51 @@ async def get_datagraph_record(
         "response": response.text
     }
 
+async def search_customer_support_documents(
+    search_text: str,
+    top_k: int = 5
+):
+    """
+    Vector search over the Customer Support Document
+    unstructured Data Cloud search index.
+
+    Returns the most relevant chunks, similarity scores,
+    and source file paths.
+    """
+
+    safe_search_text = search_text.replace("'", "''")
+
+    sql = f"""
+        SELECT
+            v.score__c AS Score__c,
+            c.chunk__c AS Chunk__c,
+            u.FilePath__c AS FilePath__c
+        FROM
+            vector_search(
+                TABLE(Customer_Support_Document_index__dlm),
+                '{safe_search_text}',
+                '',
+                {top_k}
+            ) v
+        JOIN
+            Customer_Support_Document_chunk__dlm c
+                ON v.RecordId__c = c.RecordId__c               
+        JOIN
+            Customer_Support_Document__dlm u
+                ON c.SourceRecordId__c = u.FilePath__c
+        ORDER BY 1 DESC
+        LIMIT {top_k}
+    """
+
+    result = await run_query(sql)
+
+    documents = []
+
+    for row in result.get("data", []):
+        documents.append({
+            "score": float(row[0]),
+            "chunk": row[1],
+            "source": row[2]
+        })
+
+    return documents
