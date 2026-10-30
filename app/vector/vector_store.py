@@ -1,10 +1,11 @@
 import os
 
 from pgvector import Vector
-import psycopg
 from dotenv import load_dotenv
 from openai import OpenAI
 from pgvector.psycopg import register_vector
+
+from app.database import get_connection
 
 from app.services.claude_service import ( 
     ask_claude
@@ -24,23 +25,13 @@ def get_embedding(text: str):
 
     return response.data[0].embedding
 
-def get_connection():
-    conn = psycopg.connect(
-        host="localhost",
-        port=5432,
-        dbname=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD"),
-    )
-
-    register_vector(conn)
-
-    return conn
 
 def store_document(customer_id: str, content: str):
     embedding = get_embedding(content)
 
     with get_connection() as conn:
+        register_vector(conn)
+
         with conn.cursor() as cursor:
             cursor.execute(
                 """
@@ -59,6 +50,8 @@ def search_documents(
     query_embedding = Vector(get_embedding(query))
 
     with get_connection() as conn:
+        register_vector(conn)
+
         with conn.cursor() as cursor:
 
             if customer_id:
@@ -96,6 +89,8 @@ def hybrid_search(query: str, limit: int = 3):
     query_embedding = Vector(get_embedding(query))
 
     with get_connection() as conn:
+        register_vector(conn)
+        
         with conn.cursor() as cursor:
             cursor.execute(
                 """

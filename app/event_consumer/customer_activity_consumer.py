@@ -12,6 +12,12 @@ import io
 import json
 from fastavro import schemaless_reader
 from app.kafka.kafka_producer import KafkaProducer
+
+from app.kafka.replay_checkpoint import (
+    save_replay_checkpoint,
+    load_replay_checkpoint,
+)
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,13 +41,18 @@ class CustomerActivityConsumer:
             self.kafka_producer = KafkaProducer()
     
 
-    def get_last_replay_id(self):
-        if self.REPLAY_FILE.exists():
-            return self.REPLAY_FILE.read_text().strip()
-        return None
+    def get_last_replay_id(self):        
+        replay_id = load_replay_checkpoint(
+            self.TOPIC_NAME
+        )
+        logger.info("Loaded replay ID from PostgreSQL: %s", replay_id)
+        return replay_id
 
     def save_replay_id(self, replay_id):
-        self.REPLAY_FILE.write_text(str(replay_id))
+        save_replay_checkpoint(
+            self.TOPIC_NAME,
+            replay_id
+        )
 
     def delete_replay_id(self):
         if self.REPLAY_FILE.exists():
