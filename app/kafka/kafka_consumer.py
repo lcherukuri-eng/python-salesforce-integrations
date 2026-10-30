@@ -22,7 +22,8 @@ async def main():
         kafka_topic,
         bootstrap_servers=kafka_bootstrap_server,
         group_id="customer-group",
-        auto_offset_reset="earliest"
+        auto_offset_reset="earliest",
+        enable_auto_commit=False
     )
 
     await consumer.start()
@@ -42,6 +43,13 @@ async def main():
             logger.info(
                 "Received message: %s",
                 msg.value.decode("utf-8")
+            )            
+
+            await consumer.commit()
+
+            logger.info(
+                "Committed offset after processing message offset=%s",
+                msg.offset
             )
 
     finally:
