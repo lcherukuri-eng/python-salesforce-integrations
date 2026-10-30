@@ -159,6 +159,8 @@ class CustomerActivityConsumer:
                         schema_json
                     )
 
+                    decoded_event["EventUuid"] = event.event.id                    
+
                     await self.process_event(decoded_event)  
 
                     self.save_replay_id(event.replay_id.hex())

@@ -2,6 +2,10 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from aiokafka import AIOKafkaConsumer
+
+import json
+from app.kafka.processed_event_store import process_customer_activity
+
 import logging
 
 logging.basicConfig(
@@ -40,9 +44,49 @@ async def main():
                 msg.offset,
             )
 
+            event = json.loads(
+                msg.value.decode("utf-8")
+            )
+
             logger.info(
                 "Received message: %s",
-                msg.value.decode("utf-8")
+                event
+            )
+
+            event_uuid = event.get("EventUuid")
+
+            if not event_uuid:
+                logger.error(
+                    "EventUuid missing; message cannot be processed idempotently. "
+                    "Topic=%s Partition=%s Offset=%s",
+                    msg.topic,
+                    msg.partition,
+                    msg.offset,
+                )
+
+                # Do not commit. This record can be retried or handled later.
+                continue
+
+            is_new_event = process_customer_activity(event)
+
+            if not is_new_event:
+                logger.info(
+                    "Duplicate event skipped EventUuid=%s",
+                    event_uuid 
+                )
+
+                await consumer.commit()
+
+                logger.info(
+                    "Committed offset for duplicate event offset=%s",
+                    msg.offset
+                )
+
+                continue
+
+            logger.info(
+                "Processed customer activity EventUuid=%s",
+                event_uuid
             )            
 
             await consumer.commit()
