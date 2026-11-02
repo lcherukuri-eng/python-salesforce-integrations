@@ -234,7 +234,8 @@ class CustomerActivityConsumer:
         )
         await self.kafka_producer.publish(
             os.getenv("KAFKA_TOPIC"),
-            event
+            event,
+            key=account_id
         )    
     
 

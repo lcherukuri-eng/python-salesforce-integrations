@@ -36,14 +36,17 @@ class KafkaProducer:
     async def publish(
         self,
         topic: str,
-        message: dict
+        message: dict,
+        key: str | None = None
     ):
         await self.producer.send_and_wait(
             topic,
-            json.dumps(message).encode("utf-8")
+            value=json.dumps(message).encode("utf-8"),
+            key=key.encode("utf-8") if key else None
         )
 
         logger.info(
-            "Published message to topic=%s", 
-            topic
+            "Published message to topic=%s key=%s", 
+            topic,
+            key
         )
