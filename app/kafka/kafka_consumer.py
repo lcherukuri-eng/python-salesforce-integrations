@@ -5,6 +5,8 @@ from aiokafka import AIOKafkaConsumer
 
 import json
 from app.kafka.processed_event_store import process_customer_activity
+from app.kafka.retry import process_with_retry
+from app.kafka.kafka_producer import KafkaProducer
 
 import logging
 
@@ -21,7 +23,10 @@ kafka_bootstrap_server = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 kafka_topic = os.getenv("KAFKA_TOPIC")
 
 
-async def main():    
+async def main():
+    dlq_producer = KafkaProducer()
+    await dlq_producer.start()
+
     consumer = AIOKafkaConsumer(
         kafka_topic,
         bootstrap_servers=kafka_bootstrap_server,
@@ -66,8 +71,45 @@ async def main():
 
                 # Do not commit. This record can be retried or handled later.
                 continue
+            try:
+                is_new_event = await process_with_retry(
+                    event,
+                    process_customer_activity,
+                    max_attempts=3
+                )
 
-            is_new_event = process_customer_activity(event)
+            except Exception as exc:
+                logger.error(
+                    "Processing failed after retries EventUuid=%s error=%s",
+                    event_uuid,
+                    exc,
+                )
+                dlq_message = {
+                    "original_event": event,
+                    "original_topic": msg.topic,
+                    "original_partition": msg.partition,
+                    "original_offset": msg.offset,
+                    "error": str(exc),
+                }
+
+                await dlq_producer.publish(
+                    "customer-activity-dlq",
+                    dlq_message,
+                    key=event.get("Customer_Id__c")
+                )
+
+                logger.info(
+                    "Event sent to DLQ EventUuid=%s",
+                    event_uuid
+                )
+                await consumer.commit()
+
+                logger.info(
+                    "Committed original offset after DLQ publish offset=%s",
+                    msg.offset
+                )
+
+                continue
 
             if not is_new_event:
                 logger.info(
@@ -98,6 +140,7 @@ async def main():
 
     finally:
         await consumer.stop()
+        await dlq_producer.stop()
 
 
 if __name__ == "__main__":
