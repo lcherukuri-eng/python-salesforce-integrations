@@ -1,7 +1,7 @@
-from app.database import get_connection
+from app.database import async_pool
 
 
-def process_customer_activity(event: dict) -> bool:
+async def process_customer_activity(event: dict) -> bool:
     event_uuid = event["EventUuid"]
 
     insert_processed_event_sql = """
@@ -22,19 +22,19 @@ def process_customer_activity(event: dict) -> bool:
         VALUES (%s, %s, %s, %s)
     """
 
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(
+    async with async_pool.connection() as conn:
+        async with conn.cursor() as cursor:
+            await cursor.execute(
                 insert_processed_event_sql,
                 (event_uuid,)
             )
 
-            row = cursor.fetchone()
+            row = await cursor.fetchone()
 
             if row is None:
                 return False           
 
-            cursor.execute(
+            await cursor.execute(
                 insert_activity_sql,
                 (
                     event_uuid,

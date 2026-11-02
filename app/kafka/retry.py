@@ -12,7 +12,7 @@ async def process_with_retry(
     global _test_attempt_count 
     for attempt in range(1, max_attempts + 1):
         try:
-            return  process_func(event)
+            return await process_func(event)
 
         except Exception as exc:
             logger.warning(

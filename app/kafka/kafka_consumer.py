@@ -7,6 +7,9 @@ import json
 from app.kafka.processed_event_store import process_customer_activity
 from app.kafka.retry import process_with_retry
 from app.kafka.kafka_producer import KafkaProducer
+from app.database import async_pool
+
+import selectors
 
 import logging
 
@@ -24,6 +27,9 @@ kafka_topic = os.getenv("KAFKA_TOPIC")
 
 
 async def main():
+    await async_pool.open()
+    await async_pool.wait() 
+
     dlq_producer = KafkaProducer()
     await dlq_producer.start()
 
@@ -141,7 +147,13 @@ async def main():
     finally:
         await consumer.stop()
         await dlq_producer.stop()
+        await async_pool.close()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(
+        main(),
+        loop_factory=lambda: asyncio.SelectorEventLoop(
+            selectors.SelectSelector()
+        )
+    )
