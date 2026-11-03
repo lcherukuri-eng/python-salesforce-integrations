@@ -18,6 +18,8 @@ from app.kafka.replay_checkpoint import (
     load_replay_checkpoint,
 )
 
+import random
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -264,6 +266,9 @@ class CustomerActivityConsumer:
 async def main():  
     consumer = CustomerActivityConsumer()
 
+    retry_attempt = 0
+    max_delay = 30
+
     try:   
         await consumer.authenticate()
         await consumer.kafka_producer.start()
@@ -272,17 +277,39 @@ async def main():
             try:
                 await consumer.create_stub()
                 await consumer.subscribe()
+                
+                # If subscribe() returns normally, reset backoff.                
+                retry_attempt = 0
 
             except grpc.RpcError as e:
+                base_delay = min(2 ** retry_attempt, max_delay)
+                jitter = random.uniform(0, 1)
+                delay = base_delay + jitter
                 logger.warning(
-                    "gRPC connection lost: %s. Reconnecting in 5 seconds...",
-                    e.details()
+                    "gRPC connection lost: %s. "
+                    "Reconnect attempt=%s in %.2f seconds...",
+                    e.details(),
+                    retry_attempt + 1,
+                    delay,
                 )
-                await asyncio.sleep(5)
+
+                await asyncio.sleep(delay)
+                retry_attempt += 1                
 
             except Exception:
-                logger.exception("Unexpected error. Reconnecting in 5 seconds...")
-                await asyncio.sleep(5)
+                base_delay = min(2 ** retry_attempt, max_delay)
+                jitter = random.uniform(0, 1)
+                delay = base_delay + jitter
+
+                logger.exception(
+                    "Unexpected error. "
+                    "Reconnect attempt=%s in %.2f seconds...",
+                    retry_attempt + 1,
+                    delay,
+                )
+
+                await asyncio.sleep(delay)
+                retry_attempt += 1
 
     finally:
         if consumer.kafka_producer:

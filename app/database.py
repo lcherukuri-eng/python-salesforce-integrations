@@ -5,9 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+
 DATABASE_URL = (
-    f"host=localhost "
-    f"port=5432 "
+    f"host={POSTGRES_HOST} "
+    f"port={POSTGRES_PORT} "
     f"dbname={os.getenv('POSTGRES_DB')} "
     f"user={os.getenv('POSTGRES_USER')} "
     f"password={os.getenv('POSTGRES_PASSWORD')}"

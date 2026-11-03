@@ -17,9 +17,10 @@ async def process_customer_activity(event: dict) -> bool:
             event_uuid,
             customer_id,
             activity_type,
-            activity_source
+            activity_source,
+            activity_status
         )
-        VALUES (%s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s)
     """
 
     async with async_pool.connection() as conn:
@@ -41,6 +42,7 @@ async def process_customer_activity(event: dict) -> bool:
                     event.get("Customer_Id__c"),
                     event.get("Activity_Type__c"),
                     event.get("Activity_Source__c"),
+                    event.get("Activity_Status__c")
                 )
             )
 
